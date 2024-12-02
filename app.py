@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
-from transformers import pipeline
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 import requests
 from io import StringIO
 
-translator = pipeline("translation", model="Helsinki-NLP/opus-mt-ko-en")
+model_name = "t5-small"
+tokenizer = T5Tokenizer.from_pretrained(model_name)
+model = T5ForConditionalGeneration.from_pretrained(model_name)
 
 csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
 response = requests.get(csv_url)
@@ -15,14 +17,20 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
-def get_translation(input_text, data, lang_column="question2_ko"):
+def translate_with_t5(input_text, src_lang, tgt_lang):
+    translation_prompt = f"translate {src_lang} to {tgt_lang}: {input_text}"
+    inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True)
+    outputs = model.generate(**inputs)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+def get_translation(input_text, data, src_lang, tgt_lang, lang_column="question2_ko"):
     if data is not None:
         existing_translation = data[data['question2_en'] == input_text]
         if not existing_translation.empty:
             translated_text = existing_translation[lang_column].iloc[0]
             st.write(f"Found existing translation: {translated_text}")
         else:
-            translated_text = translator(input_text)[0]['translation_text']
+            translated_text = translate_with_t5(input_text, src_lang, tgt_lang)
             st.write(f"Generated new translation: {translated_text}")
         return translated_text
     return ""
@@ -49,7 +57,7 @@ with col1:
     st.header("English" if st.session_state.lang_direction == "EN to KR" else "Korean", anchor="center")
     
     input_text = st.text_area(
-        "Type text to translate",
+        "",
         value=st.session_state.input_text,
         height=200,
         key="input_text_box",
@@ -59,7 +67,9 @@ with col1:
     
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
-        st.session_state.output_text = get_translation(st.session_state.input_text, data)
+        src_lang = "English" if st.session_state.lang_direction == "EN to KR" else "Korean"
+        tgt_lang = "Korean" if st.session_state.lang_direction == "EN to KR" else "English"
+        st.session_state.output_text = get_translation(st.session_state.input_text, data, src_lang, tgt_lang)
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
@@ -68,7 +78,7 @@ with col2:
     st.header("Korean" if st.session_state.lang_direction == "EN to KR" else "English", anchor="center")
     
     st.text_area(
-        "Translated Text",
+        "",
         value=st.session_state.output_text,
         height=200,
         disabled=True,
@@ -76,5 +86,7 @@ with col2:
     )
 
 if input_text != st.session_state.input_text:
-    st.session_state.output_text = get_translation(st.session_state.input_text, data)
-    st.experimental_rerun() 
+    src_lang = "English" if st.session_state.lang_direction == "EN to KR" else "Korean"
+    tgt_lang = "Korean" if st.session_state.lang_direction == "EN to KR" else "English"
+    st.session_state.output_text = get_translation(st.session_state.input_text, data, src_lang, tgt_lang)
+    st.experimental_rerun()
