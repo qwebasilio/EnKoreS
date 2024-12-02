@@ -1,80 +1,102 @@
 import streamlit as st
-import fasttext
 import os
+import gzip
 import requests
+import fasttext
 
+# Function to download files from Google Drive
 def download_from_drive(url, save_path):
+    st.write(f"Downloading {save_path} from Google Drive...")
     with requests.get(url, stream=True) as response:
         response.raise_for_status()
-        with open(save_path, "wb") as f:
+        with open(save_path, "wb") as file:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
-                    f.write(chunk)
+                    file.write(chunk)
+    st.write(f"Downloaded {save_path} successfully.")
 
-en_url = "https://drive.google.com/file/d/1V9lwDZOSpaPLhk6wJ0EPoY2fwY2sGHfw/view?usp=drive_link"
-ko_url = "https://drive.google.com/file/d/1--87G0NQFl33ewSJ1uj53I3G7L8wPJI6/view?usp=drive_link"
+# Decompress .gz file
+def decompress_gz(gz_path, vec_path):
+    st.write(f"Decompressing {gz_path}...")
+    with gzip.open(gz_path, "rb") as gz_file:
+        with open(vec_path, "wb") as vec_file:
+            vec_file.write(gz_file.read())
+    st.write(f"Decompressed to {vec_path}")
 
-en_file = "cc.en.300.vec.gz"
-ko_file = "cc.ko.300.vec.gz"
+# File URLs from Google Drive (ensure public sharing)
+en_url = "YOUR_ENGLISH_GZ_FILE_LINK"
+ko_url = "YOUR_KOREAN_GZ_FILE_LINK"
 
-if not os.path.exists(en_file):
-    st.write("Downloading English vector file...")
-    download_from_drive(en_url, en_file)
+# Local paths
+en_gz_path = "cc.en.300.vec.gz"
+ko_gz_path = "cc.ko.300.vec.gz"
+en_vec_path = "cc.en.300.vec"
+ko_vec_path = "cc.ko.300.vec"
 
-if not os.path.exists(ko_file):
-    st.write("Downloading Korean vector file...")
-    download_from_drive(ko_url, ko_file)
+# Download files if not present
+if not os.path.exists(en_gz_path):
+    download_from_drive(en_url, en_gz_path)
+if not os.path.exists(ko_gz_path):
+    download_from_drive(ko_url, ko_gz_path)
 
-st.write("Loading FastText models...")
-en_model = fasttext.load_model(en_file)
-ko_model = fasttext.load_model(ko_file)
+# Decompress files if not already decompressed
+if not os.path.exists(en_vec_path):
+    decompress_gz(en_gz_path, en_vec_path)
+if not os.path.exists(ko_vec_path):
+    decompress_gz(ko_gz_path, ko_vec_path)
 
-st.write("Models loaded successfully!")
-st.title("EnKoreS")
+# Load FastText models
+st.write("Loading FastText models, please wait...")
+en_model = fasttext.load_model(en_vec_path)
+ko_model = fasttext.load_model(ko_vec_path)
+st.write("FastText models loaded successfully!")
 
-def translate(text, model, lang='en'):
+# Translator Function
+def translate(text, source_model, target_model):
     words = text.split()
     translated_words = []
     for word in words:
-        if lang == 'en':
-            translated_word = ko_model.get_nearest_neighbors(word, k=1)
-            if translated_word:
-                translated_words.append(translated_word[0][1])
-            else:
-                translated_words.append(word)
-        else:
-            translated_word = en_model.get_nearest_neighbors(word, k=1)
-            if translated_word:
-                translated_words.append(translated_word[0][1])
-            else:
-                translated_words.append(word)
-
+        try:
+            # Get source word vector
+            word_vec = source_model.get_word_vector(word)
+            # Find closest word in target language
+            closest_word = target_model.get_nearest_neighbors(word_vec, k=1)[0][1]
+            translated_words.append(closest_word)
+        except Exception as e:
+            translated_words.append(word)  # Append original word if not found
     return " ".join(translated_words)
 
-lang = 'en'
-input_text = st.text_area("Start Typing", "")
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("Translate EN to KR"):
-        lang = 'en' 
-        st.write("Translating from English to Korean...")
-        translated_text = translate(input_text, en_model, lang='en')
-        st.text_area("Translated Text", translated_text, height=200)
+# Streamlit App
+st.title("EnKoreS: English-Korean Translator with Summarization")
 
-with col2:
-    if st.button("Translate KR to EN"):
-        lang = 'ko'
-        st.write("Translating from Korean to English...")
-        translated_text = translate(input_text, ko_model, lang='ko')
-        st.text_area("Translated Text", translated_text, height=200)
+# Input text area
+input_text = st.text_area("Enter text to translate:", "")
 
-# Summarization placeholder
-if st.button("Summarize Text"):
-    st.write("Summarizing the text...")
-    summarized_text = "Summarized content here."
-    st.text_area("Summarized Text", summarized_text, height=150)
+# Switch language logic
+translation_direction = st.radio("Select Translation Direction:", ["EN to KR", "KR to EN"])
 
-if input_text:
-    st.write("...")
-    live_translation = translate(input_text, en_model, lang='en') if lang == 'en' else translate(input_text, ko_model, lang='ko')
-    st.text_area("Live Translated Text", live_translation, height=150)
+if st.button("Translate"):
+    if input_text.strip():
+        st.write("Translating...")
+        if translation_direction == "EN to KR":
+            translated_text = translate(input_text, en_model, ko_model)
+        else:
+            translated_text = translate(input_text, ko_model, en_model)
+        st.text_area("Translated Text:", translated_text, height=200)
+    else:
+        st.warning("Please enter text to translate.")
+
+# Summarization (Dummy logic for now, replace with NLP logic)
+if st.button("Translate & Summarize"):
+    if input_text.strip():
+        st.write("Translating and summarizing...")
+        if translation_direction == "EN to KR":
+            translated_text = translate(input_text, en_model, ko_model)
+        else:
+            translated_text = translate(input_text, ko_model, en_model)
+        # Placeholder for summarization logic
+        summarized_text = "Summarized content goes here."
+        st.text_area("Translated Text:", translated_text, height=200)
+        st.text_area("Summarized Text:", summarized_text, height=150)
+    else:
+        st.warning("Please enter text to translate.")
