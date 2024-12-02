@@ -2,32 +2,40 @@ import streamlit as st
 import fasttext
 import os
 import requests
+import gzip
+import io
 
 def download_from_drive(url, save_path):
-  with requests.get(url, stream=True) as response:
-    response.raise_for_status()
-    with open(save_path + ".gz", "wb") as f:
-      for chunk in response.iter_content(chunk_size=8192):
-        if chunk:
-          f.write(chunk)
+    with requests.get(url, stream=True) as response:
+        response.raise_for_status()
+        with open(save_path + ".gz", "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+def load_model_from_gz(filename):
+    with gzip.open(filename, 'rb') as f:
+        model_bytes = f.read()
+    model_file = io.BytesIO(model_bytes)
+    return fasttext.load_model(model_file)
 
 en_url = "https://drive.google.com/file/d/1KKLysauoldy9Elc_m6Om55Q_wFLwRC7U/view?usp=drive_link"
 ko_url = "https://drive.google.com/file/d/1ammCe6kFeX7kbM2RsjU9nmXKNpPOp_AL/view?usp=drive_link"
 
 en_file = "cc.en.300.vec.gz"
-ko_file = "cc.ko.300.vec.gz" 
+ko_file = "cc.ko.300.vec.gz"
 
 if not os.path.exists(en_file):
-  st.write("Downloading English vector file...")
-  download_from_drive(en_url, en_file)
+    st.write("Downloading English vector file...")
+    download_from_drive(en_url, en_file)
 
 if not os.path.exists(ko_file):
-  st.write("Downloading Korean vector file...")
-  download_from_drive(ko_url, ko_file)
+    st.write("Downloading Korean vector file...")
+    download_from_drive(ko_url, ko_file)
 
 st.write("Loading FastText models...")
-en_model = fasttext.load_model(en_file, mmap=None)
-ko_model = fasttext.load_model(ko_file, mmap=None)
+en_model = load_model_from_gz(en_file)
+ko_model = load_model_from_gz(ko_file)
 st.write("Models loaded successfully!")
 
 st.title("EnKoreS: English-Korean Translator with Summarization")
