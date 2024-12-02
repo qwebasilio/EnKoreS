@@ -19,12 +19,14 @@ def load_model_from_gz(filename):
     model_file = io.BytesIO(model_bytes)
     return fasttext.load_model(model_file)
 
+# Updated URLs for your Google Drive files
 en_url = "https://drive.google.com/file/d/1KKLysauoldy9Elc_m6Om55Q_wFLwRC7U/view?usp=drive_link"
 ko_url = "https://drive.google.com/file/d/1ammCe6kFeX7kbM2RsjU9nmXKNpPOp_AL/view?usp=drive_link"
 
 en_file = "cc.en.300.vec.gz"
 ko_file = "cc.ko.300.vec.gz"
 
+# Check if files exist (optional)
 if not os.path.exists(en_file):
     st.write("Downloading English vector file...")
     download_from_drive(en_url, en_file)
@@ -33,10 +35,15 @@ if not os.path.exists(ko_file):
     st.write("Downloading Korean vector file...")
     download_from_drive(ko_url, ko_file)
 
+# Print current working directory (optional for troubleshooting)
+print(f"Current working directory: {os.getcwd()}")
+
 st.write("Loading FastText models...")
 en_model = load_model_from_gz(en_file)
 ko_model = load_model_from_gz(ko_file)
 st.write("Models loaded successfully!")
+
+# ... rest of your code ...
 
 st.title("EnKoreS: English-Korean Translator with Summarization")
 
