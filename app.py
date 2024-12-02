@@ -17,10 +17,22 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
+VALID_LANG_CODES = ["en_XX", "ko_XX"]
+
 def translate_text(text, src_lang, tgt_lang):
+    if src_lang not in VALID_LANG_CODES or tgt_lang not in VALID_LANG_CODES:
+        raise ValueError(f"Invalid language codes: src_lang={src_lang}, tgt_lang={tgt_lang}")
+    
     tokenizer.src_lang = src_lang
     encoded_input = tokenizer(text, return_tensors="pt", padding=True)
-    generated_tokens = model.generate(**encoded_input, forced_bos_token_id=tokenizer.lang_code_to_id[tgt_lang])
+    
+    if tgt_lang not in tokenizer.lang_code_to_id:
+        raise KeyError(f"Target language code '{tgt_lang}' is not supported by the model.")
+    
+    generated_tokens = model.generate(
+        **encoded_input, 
+        forced_bos_token_id=tokenizer.lang_code_to_id[tgt_lang]
+    )
     translated_text = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
     return translated_text
 
