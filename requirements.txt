@@ -3,4 +3,4 @@ pandas
 requests
 torch
 torchvision
-tochaudio
+torchaudio
