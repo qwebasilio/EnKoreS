@@ -1,13 +1,21 @@
+import streamlit as st
 import pandas as pd
 from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
-import streamlit as st
+import requests
+from io import StringIO
 
 model_name = "facebook/mbart-large-50-many-to-many-mmt"
 model = MBartForConditionalGeneration.from_pretrained(model_name)
 tokenizer = MBart50TokenizerFast.from_pretrained(model_name)
 
-csv_file = "your_file.csv"
-data = pd.read_csv(csv_file)
+csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
+response = requests.get(csv_url)
+
+if response.status_code == 200:
+    data = pd.read_csv(StringIO(response.text))
+else:
+    st.error("Failed to load CSV file from GitHub.")
+    data = None
 
 def translate_text(text, src_lang, tgt_lang):
     tokenizer.src_lang = src_lang
@@ -17,24 +25,18 @@ def translate_text(text, src_lang, tgt_lang):
     return translated_text
 
 def get_translation(input_text, data, lang_column="question2_ko"):
-    existing_translation = data[data['question2_en'] == input_text]
-    
-    if not existing_translation.empty:
-        translated_text = existing_translation[lang_column].iloc[0]
-        st.write(f"Found existing translation: {translated_text}")
-    else:
-        translated_text = translate_text(input_text, "en_XX", "ko_XX")
-        st.write(f"Generated new translation: {translated_text}")
-    return translated_text
+    if data is not None:
+        existing_translation = data[data['question2_en'] == input_text]
+        if not existing_translation.empty:
+            translated_text = existing_translation[lang_column].iloc[0]
+            st.write(f"Found existing translation: {translated_text}")
+        else:
+            translated_text = translate_text(input_text, "en_XX", "ko_XX")
+            st.write(f"Generated new translation: {translated_text}")
+        return translated_text
+    return ""
 
 st.title("EnKoreS")
-
-if "lang_direction" not in st.session_state:
-    st.session_state.lang_direction = "EN to KR"
-if "input_text" not in st.session_state:
-    st.session_state.input_text = ""
-if "output_text" not in st.session_state:
-    st.session_state.output_text = ""
 
 def switch_languages():
     if st.session_state.lang_direction == "EN to KR":
@@ -42,6 +44,13 @@ def switch_languages():
     else:
         st.session_state.lang_direction = "EN to KR"
     st.session_state.input_text, st.session_state.output_text = st.session_state.output_text, st.session_state.input_text
+
+if "lang_direction" not in st.session_state:
+    st.session_state.lang_direction = "EN to KR"
+if "input_text" not in st.session_state:
+    st.session_state.input_text = ""
+if "output_text" not in st.session_state:
+    st.session_state.output_text = ""
 
 col1, col_switch, col2 = st.columns([4, 1, 4])
 
@@ -56,15 +65,11 @@ with col1:
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
         lang_dir = st.session_state.lang_direction
-        if lang_dir == "EN to KR":
-            st.session_state.output_text = get_translation(st.session_state.input_text, data, lang_column="question2_ko")
-        else:
-            st.session_state.output_text = get_translation(st.session_state.input_text, data, lang_column="question2_en")
+        st.session_state.output_text = get_translation(st.session_state.input_text, data)
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
 
-# Right column (translated text)
 with col2:
     st.header("Korean" if st.session_state.lang_direction == "EN to KR" else "English")
     st.text_area(
@@ -74,3 +79,7 @@ with col2:
         disabled=True,
         key="output_text_box"
     )
+
+if input_text != st.session_state.input_text:
+    st.session_state.output_text = get_translation(st.session_state.input_text, data)
+    st.write(f"Live Translation: {st.session_state.output_text}")
