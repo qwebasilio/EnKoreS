@@ -1,82 +1,76 @@
+import pandas as pd
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
 import streamlit as st
-import numpy as np
-import os
-import requests
 
-def download_from_drive(url, save_path):
-    file_id = url.split("/d/")[1].split("/")[0]
-    download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
+model_name = "facebook/mbart-large-50-many-to-many-mmt"
+model = MBartForConditionalGeneration.from_pretrained(model_name)
+tokenizer = MBart50TokenizerFast.from_pretrained(model_name)
+
+csv_file = "your_file.csv"
+data = pd.read_csv(csv_file)
+
+def translate_text(text, src_lang, tgt_lang):
+    tokenizer.src_lang = src_lang
+    encoded_input = tokenizer(text, return_tensors="pt", padding=True)
+    generated_tokens = model.generate(**encoded_input, forced_bos_token_id=tokenizer.lang_code_to_id[tgt_lang])
+    translated_text = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
+    return translated_text
+
+def get_translation(input_text, data, lang_column="question2_ko"):
+    existing_translation = data[data['question2_en'] == input_text]
     
-    with requests.get(download_url, stream=True) as response:
-        response.raise_for_status()
-        with open(save_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
+    if not existing_translation.empty:
+        translated_text = existing_translation[lang_column].iloc[0]
+        st.write(f"Found existing translation: {translated_text}")
+    else:
+        translated_text = translate_text(input_text, "en_XX", "ko_XX")
+        st.write(f"Generated new translation: {translated_text}")
+    return translated_text
 
-def load_vec_file(filename):
-    word_vectors = {}
-    with open(filename, 'r', encoding='utf-8') as f:
-        num_words, dim = map(int, f.readline().split())
-        for line in f:
-            parts = line.split()
-            word = parts[0]
-            vector = np.array(parts[1:], dtype=np.float32)
-            word_vectors[word] = vector
-    return word_vectors, dim
-
-en_url = "https://drive.google.com/file/d/14zlXmW3iUgx39jU6uwDIbcYLe4QK2FFi/view?usp=drive_link"
-ko_url = "https://drive.google.com/file/d/1L4sjC9DjBqNlaCf6MDpXfHLbyjN9T_na/view?usp=drive_link"
-
-en_file = "cc.en.50.vec"
-ko_file = "cc.ko.50.vec"
-
-if not os.path.exists(en_file):
-    st.write("Downloading English vector file...")
-    download_from_drive(en_url, en_file)
-
-if not os.path.exists(ko_file):
-    st.write("Downloading Korean vector file...")
-    download_from_drive(ko_url, ko_file)
-
-print(f"Current working directory: {os.getcwd()}")
-
-st.write("Loading FastText models...")
-en_word_vectors, en_dim = load_vec_file(en_file)
-ko_word_vectors, ko_dim = load_vec_file(ko_file)
-st.write("Models loaded successfully!")
-
-st.title("EnKoreS: English-Korean Translator with Summarization")
+st.title("EnKoreS")
 
 if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KR"
+if "input_text" not in st.session_state:
+    st.session_state.input_text = ""
+if "output_text" not in st.session_state:
+    st.session_state.output_text = ""
 
 def switch_languages():
     if st.session_state.lang_direction == "EN to KR":
         st.session_state.lang_direction = "KR to EN"
     else:
         st.session_state.lang_direction = "EN to KR"
+    st.session_state.input_text, st.session_state.output_text = st.session_state.output_text, st.session_state.input_text
 
-col1, col2 = st.columns(2)
+col1, col_switch, col2 = st.columns([4, 1, 4])
 
 with col1:
     st.header("English" if st.session_state.lang_direction == "EN to KR" else "Korean")
-    input_text = st.text_area("Input Text", key="input_text", height=200)
+    input_text = st.text_area(
+        "Input Text",
+        value=st.session_state.input_text,
+        height=200,
+        key="input_text_box"
+    )
+    if input_text != st.session_state.input_text:
+        st.session_state.input_text = input_text
+        lang_dir = st.session_state.lang_direction
+        if lang_dir == "EN to KR":
+            st.session_state.output_text = get_translation(st.session_state.input_text, data, lang_column="question2_ko")
+        else:
+            st.session_state.output_text = get_translation(st.session_state.input_text, data, lang_column="question2_en")
 
+with col_switch:
+    st.button("⇋", on_click=switch_languages, use_container_width=True)
+
+# Right column (translated text)
 with col2:
     st.header("Korean" if st.session_state.lang_direction == "EN to KR" else "English")
-    output_text = st.text_area("Translated Text", value="", height=200, disabled=True, key="output_text")
-
-st.button("Switch Languages", on_click=switch_languages)
-
-def translate_text(text, lang_direction):
-    words = text.split()
-    if lang_direction == "EN to KR":
-        translated = " ".join([str(ko_word_vectors.get(word, np.zeros(50))) for word in words])
-    else:
-        translated = " ".join([str(en_word_vectors.get(word, np.zeros(50))) for word in words])
-    return translated
-
-if input_text:
-    translated_text = translate_text(input_text, st.session_state.lang_direction)
-    st.session_state.output_text = translated_text
+    st.text_area(
+        "Translated Text",
+        value=st.session_state.output_text,
+        height=200,
+        disabled=True,
+        key="output_text_box"
+    )
