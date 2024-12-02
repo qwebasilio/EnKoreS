@@ -26,7 +26,7 @@ def translate_text(text, src_lang, tgt_lang):
 
 def get_translation(input_text, data, lang_column="question2_ko"):
     if data is not None:
-        existing_translation = data[data['question1_en'] == input_text]
+        existing_translation = data[data['question2_en'] == input_text]
         if not existing_translation.empty:
             translated_text = existing_translation[lang_column].iloc[0]
             st.write(f"Found existing translation: {translated_text}")
