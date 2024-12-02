@@ -4,9 +4,12 @@ import os
 import requests
 
 def download_from_drive(url, save_path):
-    with requests.get(url, stream=True) as response:
+    file_id = url.split("/d/")[1].split("/")[0]
+    download_url = f"https://drive.google.com/uc?id={file_id}"
+    
+    with requests.get(download_url, stream=True) as response:
         response.raise_for_status()
-        with open(save_path + ".gz", "wb") as f:
+        with open(save_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
