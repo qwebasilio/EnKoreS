@@ -5,7 +5,7 @@ import requests
 
 def download_from_drive(url, save_path):
     file_id = url.split("/d/")[1].split("/")[0]
-    download_url = f"https://drive.google.com/uc?id={file_id}"
+    download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
     
     with requests.get(download_url, stream=True) as response:
         response.raise_for_status()
