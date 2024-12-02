@@ -46,9 +46,8 @@ st.title("EnKoreS")
 col1, col_switch, col2 = st.columns([4, 1, 4])
 
 with col1:
-    st.header("English" if st.session_state.lang_direction == "EN to KR" else "Korean", anchor="center")
     input_text = st.text_area(
-        "Input Text",
+        "Type text to translate",
         value=st.session_state.input_text,
         height=200,
         key="input_text_box",
@@ -63,7 +62,6 @@ with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
 
 with col2:
-    st.header("Korean" if st.session_state.lang_direction == "EN to KR" else "English", anchor="center")
     st.text_area(
         "Translated Text",
         value=st.session_state.output_text,
