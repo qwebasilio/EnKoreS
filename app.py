@@ -17,8 +17,8 @@ def decompress_gz(gz_path, vec_path):
         with open(vec_path, "wb") as vec_file:
             vec_file.write(gz_file.read())
 
-en_url = "YOUR_ENGLISH_GZ_FILE_LINK"
-ko_url = "YOUR_KOREAN_GZ_FILE_LINK"
+en_url = "https://drive.google.com/file/d/1V9lwDZOSpaPLhk6wJ0EPoY2fwY2sGHfw/view?usp=drive_link"
+ko_url = "https://drive.google.com/file/d/1--87G0NQFl33ewSJ1uj53I3G7L8wPJI6/view?usp=drive_link"
 
 en_gz_path = "cc.en.300.vec.gz"
 ko_gz_path = "cc.ko.300.vec.gz"
