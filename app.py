@@ -17,7 +17,7 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
-VALID_LANG_CODES = ["en_XX", "ko_XX"]
+VALID_LANG_CODES = ["en_XX", "kr_XX"]
 
 def translate_text(text, src_lang, tgt_lang):
     if src_lang not in VALID_LANG_CODES or tgt_lang not in VALID_LANG_CODES:
@@ -43,7 +43,7 @@ def get_translation(input_text, data, lang_column="question2_ko"):
             translated_text = existing_translation[lang_column].iloc[0]
             st.write(f"Found existing translation: {translated_text}")
         else:
-            translated_text = translate_text(input_text, "en_XX", "ko_XX")
+            translated_text = translate_text(input_text, "en_XX", "kr_XX")
             st.write(f"Generated new translation: {translated_text}")
         return translated_text
     return ""
