@@ -1,50 +1,46 @@
 import streamlit as st
-import fasttext
+import numpy as np
 import os
 import requests
-import gzip
-import io
-
-def create_drive_download_link(google_drive_url):
-    file_id = google_drive_url.split('/d/')[1].split('/')[0]
-    return f"https://drive.google.com/uc?id={file_id}"
 
 def download_from_drive(url, save_path):
     with requests.get(url, stream=True) as response:
         response.raise_for_status()
-        with open(save_path, "wb") as f:
+        with open(save_path + ".gz", "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
 
-def load_model_from_gz(filename):
-    with gzip.open(filename, 'rb') as f:
-        model_bytes = f.read()
-    model_file = io.BytesIO(model_bytes)
-    return fasttext.load_model(model_file)
+def load_vec_file(filename):
+    word_vectors = {}
+    with open(filename, 'r', encoding='utf-8') as f:
+        num_words, dim = map(int, f.readline().split())
+        for line in f:
+            parts = line.split()
+            word = parts[0]
+            vector = np.array(parts[1:], dtype=np.float32)
+            word_vectors[word] = vector
+    return word_vectors, dim
 
 en_url = "https://drive.google.com/file/d/14zlXmW3iUgx39jU6uwDIbcYLe4QK2FFi/view?usp=drive_link"
 ko_url = "https://drive.google.com/file/d/1L4sjC9DjBqNlaCf6MDpXfHLbyjN9T_na/view?usp=drive_link"
-
-en_download_url = create_drive_download_link(en_url)
-ko_download_url = create_drive_download_link(ko_url)
 
 en_file = "cc.en.50.vec"
 ko_file = "cc.ko.50.vec"
 
 if not os.path.exists(en_file):
     st.write("Downloading English vector file...")
-    download_from_drive(en_download_url, en_file)
+    download_from_drive(en_url, en_file)
 
 if not os.path.exists(ko_file):
     st.write("Downloading Korean vector file...")
-    download_from_drive(ko_download_url, ko_file)
+    download_from_drive(ko_url, ko_file)
 
 print(f"Current working directory: {os.getcwd()}")
 
 st.write("Loading FastText models...")
-en_model = fasttext.load_model(en_file)
-ko_model = fasttext.load_model(ko_file)
+en_word_vectors, en_dim = load_vec_file(en_file)
+ko_word_vectors, ko_dim = load_vec_file(ko_file)
 st.write("Models loaded successfully!")
 
 st.title("EnKoreS: English-Korean Translator with Summarization")
@@ -73,9 +69,9 @@ st.button("Switch Languages", on_click=switch_languages)
 def translate_text(text, lang_direction):
     words = text.split()
     if lang_direction == "EN to KR":
-        translated = " ".join([ko_model.get_word_vector(word).tolist() for word in words])
+        translated = " ".join([str(ko_word_vectors.get(word, np.zeros(50))) for word in words])
     else:
-        translated = " ".join([en_model.get_word_vector(word).tolist() for word in words])
+        translated = " ".join([str(en_word_vectors.get(word, np.zeros(50))) for word in words])
     return translated
 
 if input_text:
