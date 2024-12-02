@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 from io import StringIO
 
-model_name = "Helsinki-NLP/opus-mt-en-ko"
+model_name = "Helsinki-NLP/opus-mt-ko-en"
 model = MarianMTModel.from_pretrained(model_name)
 tokenizer = MarianTokenizer.from_pretrained(model_name)
 
