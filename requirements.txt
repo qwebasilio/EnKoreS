@@ -1,1 +1,3 @@
-fasttext
+transformers
+pandas
+requests
