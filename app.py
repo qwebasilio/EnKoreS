@@ -4,30 +4,30 @@ import os
 import requests
 
 def download_from_drive(url, save_path):
-    with requests.get(url, stream=True) as response:
-        response.raise_for_status()
-        with open(save_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
+  with requests.get(url, stream=True) as response:
+    response.raise_for_status()
+    with open(save_path + ".gz", "wb") as f:
+      for chunk in response.iter_content(chunk_size=8192):
+        if chunk:
+          f.write(chunk)
 
 en_url = "https://drive.google.com/file/d/1V9lwDZOSpaPLhk6wJ0EPoY2fwY2sGHfw/view?usp=drive_link"
 ko_url = "https://drive.google.com/file/d/1--87G0NQFl33ewSJ1uj53I3G7L8wPJI6/view?usp=drive_link"
 
-en_file = "cc.en.300.vec"
-ko_file = "cc.ko.300.vec"
+en_file = "cc.en.300.vec.gz"
+ko_file = "cc.ko.300.vec.gz" 
 
 if not os.path.exists(en_file):
-    st.write("Downloading English vector file...")
-    download_from_drive(en_url, en_file)
+  st.write("Downloading English vector file...")
+  download_from_drive(en_url, en_file)
 
 if not os.path.exists(ko_file):
-    st.write("Downloading Korean vector file...")
-    download_from_drive(ko_url, ko_file)
+  st.write("Downloading Korean vector file...")
+  download_from_drive(ko_url, ko_file)
 
 st.write("Loading FastText models...")
-en_model = fasttext.load_model(en_file)
-ko_model = fasttext.load_model(ko_file)
+en_model = fasttext.load_model(en_file, mmap=None)
+ko_model = fasttext.load_model(ko_file, mmap=None)
 st.write("Models loaded successfully!")
 
 st.title("EnKoreS: English-Korean Translator with Summarization")
