@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
+from transformers import MBartForConditionalGeneration, MBart50Tokenizer
 import requests
 from io import StringIO
 
 model_name = "facebook/mbart-large-50-many-to-many-mmt"
 model = MBartForConditionalGeneration.from_pretrained(model_name)
-tokenizer = MBart50TokenizerFast.from_pretrained(model_name)
+tokenizer = MBart50Tokenizer.from_pretrained(model_name)
 
 csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
 response = requests.get(csv_url)
