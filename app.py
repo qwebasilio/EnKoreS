@@ -55,7 +55,6 @@ col1, col_switch, col2 = st.columns([4, 1, 4])
 
 with col1:
     st.header("English" if st.session_state.lang_direction == "EN to KR" else "Korean", anchor="center")
-    
     input_text = st.text_area(
         "",
         value=st.session_state.input_text,
@@ -64,7 +63,6 @@ with col1:
         label_visibility="collapsed",
         help="Type text to be translated."
     )
-    
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
         src_lang = "English" if st.session_state.lang_direction == "EN to KR" else "Korean"
@@ -76,7 +74,6 @@ with col_switch:
 
 with col2:
     st.header("Korean" if st.session_state.lang_direction == "EN to KR" else "English", anchor="center")
-    
     st.text_area(
         "",
         value=st.session_state.output_text,
