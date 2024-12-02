@@ -11,8 +11,8 @@ def download_from_drive(url, save_path):
         if chunk:
           f.write(chunk)
 
-en_url = "https://drive.google.com/file/d/1V9lwDZOSpaPLhk6wJ0EPoY2fwY2sGHfw/view?usp=drive_link"
-ko_url = "https://drive.google.com/file/d/1--87G0NQFl33ewSJ1uj53I3G7L8wPJI6/view?usp=drive_link"
+en_url = "https://drive.google.com/file/d/1KKLysauoldy9Elc_m6Om55Q_wFLwRC7U/view?usp=drive_link"
+ko_url = "https://drive.google.com/file/d/1ammCe6kFeX7kbM2RsjU9nmXKNpPOp_AL/view?usp=drive_link"
 
 en_file = "cc.en.300.vec.gz"
 ko_file = "cc.ko.300.vec.gz" 
