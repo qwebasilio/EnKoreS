@@ -1,4 +1,6 @@
 transformers
 pandas
 requests
-pytorch
+torch
+torchvision
+tochaudio
