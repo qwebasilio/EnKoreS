@@ -8,7 +8,7 @@ model_name = "Helsinki-NLP/opus-mt-ko-en"
 model = MarianMTModel.from_pretrained(model_name)
 tokenizer = MarianTokenizer.from_pretrained(model_name)
 
-def translate_text(text, src_lang="en", tgt_lang="ko"):
+def translate_text(text, src_lang="ko", tgt_lang="en"):
     tokenized_input = tokenizer(text, return_tensors="pt", padding=True)
     translated_tokens = model.generate(**tokenized_input)
     translated_text = tokenizer.decode(translated_tokens[0], skip_special_tokens=True)
@@ -25,7 +25,7 @@ else:
 
 VALID_LANG_CODES = ["en_XX", "ko_KR"]
 
-st.title("EnKoreS: English-Korean Translator")
+st.title("EnKoreS")
 
 def switch_languages():
     if st.session_state.lang_direction == "EN to KR":
@@ -76,7 +76,7 @@ def get_translation(input_text, data, lang_column="question2_ko"):
             translated_text = existing_translation[lang_column].iloc[0]
             st.write(f"Found existing translation: {translated_text}")
         else:
-            translated_text = translate_text(input_text, "en", "ko")
+            translated_text = translate_text(input_text, "ko", "en")  # Change translation direction
             st.write(f"Generated new translation: {translated_text}")
         return translated_text
     return ""
