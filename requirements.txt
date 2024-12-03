@@ -4,5 +4,4 @@ requests
 torch
 torchvision
 torchaudio
-sentencepiece
-sacremoses
+gdown
