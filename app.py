@@ -1,31 +1,38 @@
 import streamlit as st
-import pandas as pd
-from transformers import AutoModel, AutoTokenizer
-import requests
-from io import StringIO
+import gdown
+import zipfile
+import os
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-model_name = "KETI-AIR/ke-t5-small"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
+# Google Drive direct download URL for the fine-tuned model
+google_drive_url = 'https://drive.google.com/uc?id=1W0qpVfmcGzXNPESMVVU0Iq1tpSS8SGr0&export=download'
 
-csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
-response = requests.get(csv_url)
+# Specify the download path and extraction directory
+zip_file_path = '/content/model.zip'
+extraction_path = '/content/model/'
 
-if response.status_code == 200:
-    data = pd.read_csv(StringIO(response.text))
+# Download the fine-tuned model zip file from Google Drive
+if not os.path.exists(extraction_path):
+    gdown.download(google_drive_url, zip_file_path, quiet=False)
+    
+    # Extract the ZIP file
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(extraction_path)
+    st.write("Model downloaded and extracted successfully.")
 else:
-    st.error("Failed to load CSV file from GitHub.")
-    data = None
+    st.write("Model already exists in the content folder.")
 
-def translate_with_ke_t5(input_text, lang_direction):
-    if lang_direction == "EN to KR":
-        translation_prompt = f"translate English to Korean: {input_text}"
-    else:
-        translation_prompt = f"translate Korean to English: {input_text}"
-    inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True, truncation=True)
-    outputs = model(**inputs)
-    return tokenizer.decode(outputs.last_hidden_state.argmax(dim=-1)[0], skip_special_tokens=True)
+# Load the model and tokenizer from the extracted directory
+model = AutoModelForSeq2SeqLM.from_pretrained(extraction_path)
+tokenizer = AutoTokenizer.from_pretrained(extraction_path)
 
+# Translation function
+def translate_with_marian(input_text):
+    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
+    outputs = model.generate(**inputs, max_length=512)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+# Initialize session state variables if not already initialized
 if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KR"
 if "input_text" not in st.session_state:
@@ -33,6 +40,7 @@ if "input_text" not in st.session_state:
 if "output_text" not in st.session_state:
     st.session_state.output_text = ""
 
+# Switch language direction
 def switch_languages():
     if st.session_state.lang_direction == "EN to KR":
         st.session_state.lang_direction = "KR to EN"
@@ -56,7 +64,7 @@ with col1:
     )
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
-        st.session_state.output_text = translate_with_ke_t5(st.session_state.input_text, st.session_state.lang_direction)
+        st.session_state.output_text = translate_with_marian(st.session_state.input_text)
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
@@ -72,5 +80,5 @@ with col2:
     )
 
 if input_text != st.session_state.input_text:
-    st.session_state.output_text = translate_with_ke_t5(st.session_state.input_text, st.session_state.lang_direction)
+    st.session_state.output_text = translate_with_marian(st.session_state.input_text)
     st.experimental_rerun()
