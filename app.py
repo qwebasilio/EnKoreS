@@ -1,15 +1,16 @@
-import streamlit as st
+import os
 import gdown
 import zipfile
-import os
+import streamlit as st
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+# Define the path for the downloaded zip and extraction folder
+current_dir = os.getcwd()
+zip_file_path = os.path.join(current_dir, 'ke-t5-small-finetuned.zip')  # Updated to your model's zip file name
+extraction_path = os.path.join(current_dir, 'model')
 
 # Google Drive direct download URL for the fine-tuned model
 google_drive_url = 'https://drive.google.com/uc?id=1W0qpVfmcGzXNPESMVVU0Iq1tpSS8SGr0&export=download'
-
-# Specify the download path and extraction directory
-zip_file_path = '/content/model.zip'
-extraction_path = '/content/model/'
 
 # Download the fine-tuned model zip file from Google Drive
 if not os.path.exists(extraction_path):
