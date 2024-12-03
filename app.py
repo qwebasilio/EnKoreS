@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import requests
 from io import StringIO
 
-model_name = "mt5-small"  # Updated to multilingual version
-tokenizer = T5Tokenizer.from_pretrained(model_name)
-model = T5ForConditionalGeneration.from_pretrained(model_name)
+model_name = "google/mt5-small"  # Updated to the correct mT5-small model
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
 csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
 response = requests.get(csv_url)
@@ -17,9 +17,9 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
-def translate_with_t5(input_text, src_lang, tgt_lang):
+def translate_with_mt5(input_text, src_lang, tgt_lang):
     translation_prompt = f"translate {src_lang} to {tgt_lang}: {input_text}"
-    inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True)
+    inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True, truncation=True)
     outputs = model.generate(**inputs, max_length=512)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
@@ -30,7 +30,7 @@ def get_translation(input_text, data, src_lang, tgt_lang, lang_column="question2
             translated_text = existing_translation[lang_column].iloc[0]
             st.write(f"Found existing translation: {translated_text}")
         else:
-            translated_text = translate_with_t5(input_text, src_lang, tgt_lang)
+            translated_text = translate_with_mt5(input_text, src_lang, tgt_lang)
             st.write(f"Generated new translation: {translated_text}")
         return translated_text
     return ""
