@@ -17,25 +17,14 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
-def translate_with_t5(input_text, src_lang, tgt_lang):
-    prompt = f"translate {src_lang} to {tgt_lang}: {input_text}"
-    inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
-    outputs = model.generate(**inputs, max_length=128)
+def translate_with_t5(input_text, lang_direction):
+    if lang_direction == "EN to KR":
+        translation_prompt = f"translate English to Korean: {input_text}"
+    else:
+        translation_prompt = f"translate Korean to English: {input_text}"
+    inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True, truncation=True)
+    outputs = model.generate(**inputs, max_length=512)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-def get_translation(input_text, data, lang_column="question2_ko"):
-    if data is not None:
-        existing_translation = data[data['question2_en'] == input_text]
-        if not existing_translation.empty:
-            translated_text = existing_translation[lang_column].iloc[0]
-            st.write(f"Found existing translation: {translated_text}")
-        else:
-            src_lang = "Korean" if st.session_state.lang_direction == "KR to EN" else "English"
-            tgt_lang = "English" if st.session_state.lang_direction == "KR to EN" else "Korean"
-            translated_text = translate_with_t5(input_text, src_lang, tgt_lang)
-            st.write(f"Generated new translation: {translated_text}")
-        return translated_text
-    return ""
 
 if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KR"
@@ -67,11 +56,7 @@ with col1:
     )
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
-        st.session_state.output_text = translate_with_t5(
-            st.session_state.input_text,
-            "English" if st.session_state.lang_direction == "EN to KR" else "Korean",
-            "Korean" if st.session_state.lang_direction == "EN to KR" else "English",
-        )
+        st.session_state.output_text = translate_with_t5(st.session_state.input_text, st.session_state.lang_direction)
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
@@ -87,9 +72,5 @@ with col2:
     )
 
 if input_text != st.session_state.input_text:
-    st.session_state.output_text = translate_with_t5(
-        st.session_state.input_text,
-        "English" if st.session_state.lang_direction == "EN to KR" else "Korean",
-        "Korean" if st.session_state.lang_direction == "EN to KR" else "English",
-    )
+    st.session_state.output_text = translate_with_t5(st.session_state.input_text, st.session_state.lang_direction)
     st.experimental_rerun()
