@@ -4,7 +4,7 @@ from transformers import MarianMTModel, MarianTokenizer
 import requests
 from io import StringIO
 
-model_name = "Helsinki-NLP/opus-mt-en-ko"  # English to Korean
+model_name = "Helsinki-NLP/opus-mt-ko-en"  # English to Korean
 tokenizer = MarianTokenizer.from_pretrained(model_name)
 model = MarianMTModel.from_pretrained(model_name)
 
