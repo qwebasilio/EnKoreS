@@ -4,7 +4,7 @@ from transformers import MarianMTModel, MarianTokenizer
 import requests
 from io import StringIO
 
-model_name = "Helsinki-NLP/opus-mt-ko-en"  # English to Korean
+model_name = "Helsinki-NLP/opus-mt-ko-en"
 tokenizer = MarianTokenizer.from_pretrained(model_name)
 model = MarianMTModel.from_pretrained(model_name)
 
@@ -17,20 +17,19 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
-def translate_with_mt5(input_text, src_lang, tgt_lang):
-    translation_prompt = f"translate {src_lang} to {tgt_lang}: {input_text}"
-    inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True, truncation=True)
+def translate_with_marian(input_text):
+    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
     outputs = model.generate(**inputs, max_length=512)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-def get_translation(input_text, data, src_lang, tgt_lang, lang_column="question2_ko"):
+def get_translation(input_text, data, lang_column="question2_ko"):
     if data is not None:
         existing_translation = data[data['question2_en'] == input_text]
         if not existing_translation.empty:
             translated_text = existing_translation[lang_column].iloc[0]
             st.write(f"Found existing translation: {translated_text}")
         else:
-            translated_text = translate_with_mt5(input_text, src_lang, tgt_lang)
+            translated_text = translate_with_marian(input_text)
             st.write(f"Generated new translation: {translated_text}")
         return translated_text
     return ""
@@ -65,9 +64,7 @@ with col1:
     )
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
-        src_lang = "English" if st.session_state.lang_direction == "EN to KR" else "Korean"
-        tgt_lang = "Korean" if st.session_state.lang_direction == "EN to KR" else "English"
-        st.session_state.output_text = get_translation(st.session_state.input_text, data, src_lang, tgt_lang)
+        st.session_state.output_text = translate_with_marian(st.session_state.input_text)
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
@@ -83,7 +80,5 @@ with col2:
     )
 
 if input_text != st.session_state.input_text:
-    src_lang = "English" if st.session_state.lang_direction == "EN to KR" else "Korean"
-    tgt_lang = "Korean" if st.session_state.lang_direction == "EN to KR" else "English"
-    st.session_state.output_text = get_translation(st.session_state.input_text, data, src_lang, tgt_lang)
+    st.session_state.output_text = translate_with_marian(st.session_state.input_text)
     st.experimental_rerun()
