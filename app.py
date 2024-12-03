@@ -17,8 +17,9 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
-def translate_with_marian(input_text):
-    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
+def translate_with_marian(input_text, tgt_lang):
+    formatted_text = f">>{tgt_lang}<< {input_text}"
+    inputs = tokenizer(formatted_text, return_tensors="pt", padding=True, truncation=True)
     outputs = model.generate(**inputs, max_length=512)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
@@ -29,7 +30,8 @@ def get_translation(input_text, data, lang_column="question2_ko"):
             translated_text = existing_translation[lang_column].iloc[0]
             st.write(f"Found existing translation: {translated_text}")
         else:
-            translated_text = translate_with_marian(input_text)
+            tgt_lang = "ko" if st.session_state.lang_direction == "EN to KR" else "en"
+            translated_text = translate_with_marian(input_text, tgt_lang)
             st.write(f"Generated new translation: {translated_text}")
         return translated_text
     return ""
@@ -64,7 +66,7 @@ with col1:
     )
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
-        st.session_state.output_text = translate_with_marian(st.session_state.input_text)
+        st.session_state.output_text = translate_with_marian(st.session_state.input_text, "ko" if st.session_state.lang_direction == "EN to KR" else "en")
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
@@ -80,5 +82,5 @@ with col2:
     )
 
 if input_text != st.session_state.input_text:
-    st.session_state.output_text = translate_with_marian(st.session_state.input_text)
+    st.session_state.output_text = translate_with_marian(st.session_state.input_text, "ko" if st.session_state.lang_direction == "EN to KR" else "en")
     st.experimental_rerun()
