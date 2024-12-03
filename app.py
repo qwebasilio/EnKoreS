@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import MarianMTModel, MarianTokenizer
 import requests
 from io import StringIO
 
-model_name = "google/mt5-small"  # Updated to the correct mT5-small model
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+model_name = "Helsinki-NLP/opus-mt-en-ko"  # English to Korean
+tokenizer = MarianTokenizer.from_pretrained(model_name)
+model = MarianMTModel.from_pretrained(model_name)
 
 csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
 response = requests.get(csv_url)
