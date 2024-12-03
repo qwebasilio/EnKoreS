@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+from transformers import AutoModel, AutoTokenizer
 import requests
 from io import StringIO
 
 model_name = "KETI-AIR/ke-t5-small"
-tokenizer = T5Tokenizer.from_pretrained(model_name)
-model = T5ForConditionalGeneration.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
 
 csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
 response = requests.get(csv_url)
@@ -17,14 +17,14 @@ else:
     st.error("Failed to load CSV file from GitHub.")
     data = None
 
-def translate_with_t5(input_text, lang_direction):
+def translate_with_ke_t5(input_text, lang_direction):
     if lang_direction == "EN to KR":
         translation_prompt = f"translate English to Korean: {input_text}"
     else:
         translation_prompt = f"translate Korean to English: {input_text}"
     inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True, truncation=True)
-    outputs = model.generate(**inputs, max_length=512)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    outputs = model(**inputs)
+    return tokenizer.decode(outputs.last_hidden_state.argmax(dim=-1)[0], skip_special_tokens=True)
 
 if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KR"
@@ -56,7 +56,7 @@ with col1:
     )
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
-        st.session_state.output_text = translate_with_t5(st.session_state.input_text, st.session_state.lang_direction)
+        st.session_state.output_text = translate_with_ke_t5(st.session_state.input_text, st.session_state.lang_direction)
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
@@ -72,5 +72,5 @@ with col2:
     )
 
 if input_text != st.session_state.input_text:
-    st.session_state.output_text = translate_with_t5(st.session_state.input_text, st.session_state.lang_direction)
+    st.session_state.output_text = translate_with_ke_t5(st.session_state.input_text, st.session_state.lang_direction)
     st.experimental_rerun()
