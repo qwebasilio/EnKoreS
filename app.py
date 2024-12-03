@@ -1,39 +1,33 @@
-import os
-import gdown
-import zipfile
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+import pandas as pd
 import streamlit as st
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+import requests
 
-# Google Drive file download link
-google_drive_url = 'https://drive.google.com/uc?id=1W0qpVfmcGzXNPESMVVU0Iq1tpSS8SGr0'
-zip_file_path = '/content/ke-t5-small-finetuned.zip'
-extraction_path = '/content/model'
+# Load the pre-trained KETI-AIR/ke-t5-small model and tokenizer from Hugging Face
+model = AutoModelForSeq2SeqLM.from_pretrained("KETI-AIR/ke-t5-small")
+tokenizer = AutoTokenizer.from_pretrained("KETI-AIR/ke-t5-small")
 
-# Check if the extracted model directory exists, if not, download and extract it
-if not os.path.exists(extraction_path):
-    # Download the ZIP file from Google Drive
-    gdown.download(google_drive_url, zip_file_path, quiet=False)
-
-    # Extract the ZIP file
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(extraction_path)
-
-# Load the fine-tuned model and tokenizer
-model = AutoModelForSeq2SeqLM.from_pretrained(extraction_path)
-tokenizer = AutoTokenizer.from_pretrained(extraction_path)
-
-# Define the translation function
+# Function to translate text using the model
 def translate_text(input_text):
     inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
     outputs = model.generate(**inputs)
     translated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return translated_text
 
-# Streamlit UI
-st.title('Text Translation with Fine-Tuned Model')
+# Load the dataset from GitHub
+dataset_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
+response = requests.get(dataset_url)
+data = pd.read_csv(pd.compat.StringIO(response.text))
 
+# Display the dataset
+st.title("Text Translation with Fine-Tuned Model")
+st.write("Dataset Overview:")
+st.dataframe(data.head())  # Show the first few rows of the dataset
+
+# UI for input text
 input_text = st.text_area("Enter text to translate:")
 
+# Translate text when the button is clicked
 if input_text:
     translated_text = translate_text(input_text)
     st.write("Translated Text:")
