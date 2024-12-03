@@ -4,7 +4,7 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration
 import requests
 from io import StringIO
 
-model_name = "t5-small"
+model_name = "t5-multilingual-small"  # Updated to multilingual version
 tokenizer = T5Tokenizer.from_pretrained(model_name)
 model = T5ForConditionalGeneration.from_pretrained(model_name)
 
@@ -20,7 +20,7 @@ else:
 def translate_with_t5(input_text, src_lang, tgt_lang):
     translation_prompt = f"translate {src_lang} to {tgt_lang}: {input_text}"
     inputs = tokenizer(translation_prompt, return_tensors="pt", padding=True)
-    outputs = model.generate(**inputs)
+    outputs = model.generate(**inputs, max_length=512)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 def get_translation(input_text, data, src_lang, tgt_lang, lang_column="question2_ko"):
