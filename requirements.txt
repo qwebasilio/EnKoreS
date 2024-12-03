@@ -4,4 +4,4 @@ requests
 torch
 torchvision
 torchaudio
-gdown
+sentencepiece
