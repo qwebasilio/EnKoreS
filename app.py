@@ -4,7 +4,7 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration
 import requests
 from io import StringIO
 
-model_name = "t5-multilingual-small"  # Updated to multilingual version
+model_name = "mt5-small"  # Updated to multilingual version
 tokenizer = T5Tokenizer.from_pretrained(model_name)
 model = T5ForConditionalGeneration.from_pretrained(model_name)
 
