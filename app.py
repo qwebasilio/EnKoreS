@@ -25,25 +25,26 @@ def translate_text(text, src_lang, tgt_lang):
         translated_text = model.translate(text, source_lang="ko", target_lang="en")
     else:
         raise ValueError(f"Unsupported language pair: {src_lang} to {tgt_lang}")
-    
     return translated_text
 
-
+@st.cache_data
 def get_translation(input_text, data, source_column, target_column):
     if not input_text.strip():
         return ""
     if source_column not in data.columns or target_column not in data.columns:
         st.warning(f"The provided data does not contain the columns: {source_column} and {target_column}. Using live translation.")
         return translate_text(input_text, source_column.split("_")[1], target_column.split("_")[1])
+    
     existing_translation = data[data[source_column] == input_text]
     if not existing_translation.empty:
         translated_text = existing_translation[target_column].iloc[0]
         st.write(f"Found existing translation: {translated_text}")
     else:
-        src_lang = source_column.split("_")[1] 
+        src_lang = source_column.split("_")[1]
         tgt_lang = target_column.split("_")[1]
         translated_text = translate_text(input_text, src_lang, tgt_lang)
         st.write(f"Generated new translation: {translated_text}")
+    
     return translated_text
 
 st.title("EnKoreS")
@@ -60,11 +61,11 @@ if "output_text" not in st.session_state:
 
 @st.cache_data
 def load_data():
-    url = 'https://raw.githubusercontent.com/qwebasilio/EnKoreS/refs/heads/master/sample_dataset.csv'
+    file_path = 'path_to_your_local_csv_file.csv'
     try:
-        return pd.read_csv(url)
+        return pd.read_csv(file_path)
     except Exception as e:
-        st.error(f"Error loading data from GitHub: {e}")
+        st.error(f"Error loading data from file: {e}")
         return pd.DataFrame(columns=['question2_en', 'question2_ko'])
 
 data = load_data()
@@ -80,6 +81,15 @@ if input_text != st.session_state.input_text:
     st.session_state.input_text = input_text
     st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
 
-st.text_area("Translated Text:", value=st.session_state.output_text, height=150)
+translate_button = st.button("Translate")
 
-st.sidebar.write("Powered by EasyNMT and Streamlit")
+if translate_button:
+    if input_text:
+        st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
+        st.subheader("Translated Text:")
+        st.write(st.session_state.output_text)
+    else:
+        st.warning("Please enter text to translate.")
+
+# Display translated text
+st.text_area("Translated Text:", value=st.session_state.output_text, height=150)
