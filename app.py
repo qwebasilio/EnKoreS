@@ -3,11 +3,6 @@ import nltk
 import os
 from easynmt import EasyNMT
 import pandas as pd
-from transformers import pipeline
-
-summarizer = pipeline('summarization', model='sshleifer/distilbart-cnn-12-6')
-
-model = EasyNMT('m2m_100_418M')
 
 nltk_data_dir = os.path.expanduser("~/nltk_data")
 os.makedirs(nltk_data_dir, exist_ok=True)
@@ -19,21 +14,20 @@ try:
 except Exception as e:
     st.error(f"Error downloading NLTK resources: {e}")
 
+model = EasyNMT('m2m_100_418M')
+
 VALID_LANG_CODES = ['ko', 'en']
 
-@st.cache_data
 def translate_text(text, src_lang, tgt_lang):
     if src_lang == "en" and tgt_lang == "ko":
-        return model.translate(text, source_lang="en", target_lang="ko")
+        translated_text = model.translate(text, source_lang="en", target_lang="ko")
     elif src_lang == "ko" and tgt_lang == "en":
-        return model.translate(text, source_lang="ko", target_lang="en")
+        translated_text = model.translate(text, source_lang="ko", target_lang="en")
     else:
         raise ValueError(f"Unsupported language pair: {src_lang} to {tgt_lang}")
     
-@st.cache_data
-def summarize_text(text):
-    summary = summarizer(text, max_length=150, min_length=50, do_sample=False)
-    return summary[0]['summary_text']
+    return translated_text
+
 
 def get_translation(input_text, data, source_column, target_column):
     if not input_text.strip():
@@ -43,11 +37,14 @@ def get_translation(input_text, data, source_column, target_column):
         return translate_text(input_text, source_column.split("_")[1], target_column.split("_")[1])
     existing_translation = data[data[source_column] == input_text]
     if not existing_translation.empty:
-        return existing_translation[target_column].iloc[0]
+        translated_text = existing_translation[target_column].iloc[0]
+        st.write(f"Found existing translation: {translated_text}")
     else:
-        src_lang = source_column.split("_")[1]
+        src_lang = source_column.split("_")[1] 
         tgt_lang = target_column.split("_")[1]
-        return translate_text(input_text, src_lang, tgt_lang)
+        translated_text = translate_text(input_text, src_lang, tgt_lang)
+        st.write(f"Generated new translation: {translated_text}")
+    return translated_text
 
 st.title("EnKoreS")
 
@@ -79,34 +76,10 @@ else:
     source_col = "question2_ko"
     target_col = "question2_en"
 
-translate_button = st.button("Translate")
-summarize_button = st.button("Translate and Summarize")
-
 if input_text != st.session_state.input_text:
     st.session_state.input_text = input_text
     st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
 
-if translate_button:
-    if input_text:
-        st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
-        st.subheader("Translated Text:")
-        st.write(st.session_state.output_text)
-    else:
-        st.warning("Please enter text to translate.")
-
-# If Translate and Summarize button is clicked
-if summarize_button:
-    if input_text:
-        # Perform translation first
-        translated_text = get_translation(input_text, data, source_col, target_col)
-        st.subheader("Translated Text:")
-        st.write(translated_text)
-
-        # Perform summarization
-        summarized_text = summarize_text(translated_text)
-        st.subheader("Summarized Text:")
-        st.write(summarized_text)
-    else:
-        st.warning("Please enter text to translate and summarize.")
-
 st.text_area("Translated Text:", value=st.session_state.output_text, height=150)
+
+st.sidebar.write("Powered by EasyNMT and Streamlit")
