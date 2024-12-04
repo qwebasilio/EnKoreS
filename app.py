@@ -6,7 +6,7 @@ import pandas as pd
 from transformers import pipeline
 
 # Initialize Hugging Face summarizer
-summarizer = pipeline('summarization', model='facebook/m2m_100_418M')
+summarizer = pipeline('summarization', model='sshleifer/distilbart-cnn-12-6')
 
 # Initialize the EasyNMT model (m2m_100_418M)
 model = EasyNMT('m2m_100_418M')
