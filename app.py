@@ -91,11 +91,11 @@ if "output_text" not in st.session_state:
 
 @st.cache_data
 def load_data():
-    file_path = 'path_to_your_local_csv_file.csv'
+    url = 'https://raw.githubusercontent.com/qwebasilio/EnKoreS/refs/heads/master/sample_dataset.csv'
     try:
-        return pd.read_csv(file_path)
+        return pd.read_csv(url)
     except Exception as e:
-        st.error(f"Error loading data from file: {e}")
+        st.error(f"Error loading data from GitHub: {e}")
         return pd.DataFrame(columns=['question2_en', 'question2_ko'])
 
 data = load_data()
@@ -119,7 +119,7 @@ if translate_button:
     if input_text:
         st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
         st.subheader("Translated Text:")
-        st.write(st.session_state.output_text) 
+        st.write(st.session_state.output_text)
     else:
         st.warning("Please enter text to translate.")
 
