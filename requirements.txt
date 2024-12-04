@@ -7,4 +7,3 @@ torchaudio
 sentencepiece
 easynmt
 nltk
-googletrans
