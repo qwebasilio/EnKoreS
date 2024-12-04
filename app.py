@@ -96,7 +96,7 @@ def load_data():
         return pd.read_csv(url)
     except Exception as e:
         st.error(f"Error loading data from GitHub: {e}")
-        return pd.DataFrame(columns=['question2_en', 'question2_ko']
+        return pd.DataFrame(columns=['question2_en', 'question2_ko'])
 
 data = load_data()
 
