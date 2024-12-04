@@ -14,7 +14,7 @@ try:
 except Exception as e:
     st.error(f"Error downloading NLTK resources: {e}")
 
-model = EasyNMT('m2m100_418M')
+model = EasyNMT('m2m_100_418M')
 
 VALID_LANG_CODES = ['ko', 'en']
 
