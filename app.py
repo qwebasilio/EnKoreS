@@ -68,12 +68,10 @@ def get_translation(input_text, data, source_column, target_column):
     existing_translation = data[data[source_column] == input_text]
     if not existing_translation.empty:
         translated_text = existing_translation[target_column].iloc[0]
-        st.write(f"Found existing translation: {translated_text}")
     else:
         src_lang = source_column.split("_")[1]
         tgt_lang = target_column.split("_")[1]
         translated_text = translate_text(input_text, src_lang, tgt_lang)
-        st.write(f"Generated new translation: {translated_text}")
     
     return translated_text
 
@@ -119,7 +117,6 @@ if translate_button:
     if input_text:
         st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
         st.subheader("Translated Text:")
-        st.write(st.session_state.output_text)
     else:
         st.warning("Please enter text to translate.")
 
