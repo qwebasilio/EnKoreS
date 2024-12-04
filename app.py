@@ -1,33 +1,26 @@
 import streamlit as st
-import nltk
-import os
 from easynmt import EasyNMT
+import nltk
 import heapq
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 
-nltk_data_dir = os.path.expanduser("~/nltk_data")
-os.makedirs(nltk_data_dir, exist_ok=True)
-nltk.data.path.append(nltk_data_dir)
-
-try:
-    nltk.download('punkt', download_dir=nltk_data_dir)
-    nltk.download('stopwords', download_dir=nltk_data_dir)
-except Exception as e:
-    st.error(f"Error downloading NLTK resources: {e}")
+def setup_nltk_for_summarization():
+    try:
+        nltk.download('punkt', download_dir=nltk_data_dir)
+        nltk.download('stopwords', download_dir=nltk_data_dir)
+    except Exception as e:
+        st.error(f"Error downloading NLTK resources: {e}")
 
 model = EasyNMT('m2m_100_418M')
 
-VALID_LANG_CODES = ['ko', 'en']
-
 def translate_text(text, src_lang, tgt_lang):
     if src_lang == "en" and tgt_lang == "ko":
-        translated_text = model.translate(text, source_lang="en", target_lang="ko")
+        return model.translate(text, source_lang="en", target_lang="ko")
     elif src_lang == "ko" and tgt_lang == "en":
-        translated_text = model.translate(text, source_lang="ko", target_lang="en")
+        return model.translate(text, source_lang="ko", target_lang="en")
     else:
         raise ValueError(f"Unsupported language pair: {src_lang} to {tgt_lang}")
-    return translated_text
 
 def summarize_text(text, num_sentences=3):
     sentences = sent_tokenize(text)
@@ -63,20 +56,18 @@ lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KR", "
 st.session_state.lang_direction = lang_direction
 
 input_text = st.text_area("Enter text to translate:")
+
 if "input_text" not in st.session_state:
     st.session_state.input_text = ""
 if "output_text" not in st.session_state:
     st.session_state.output_text = ""
 
 translate_button = st.button("Translate")
-
 translate_and_summarize_button = st.button("Translate & Summarize")
 
 if translate_button:
     if input_text:
-        src_lang = "en" if lang_direction == "EN to KR" else "ko"
-        tgt_lang = "ko" if lang_direction == "EN to KR" else "en"
-        st.session_state.output_text = translate_text(input_text, src_lang, tgt_lang)
+        st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en", "ko")
         st.subheader("Translated Text:")
         st.write(st.session_state.output_text)
     else:
@@ -84,12 +75,11 @@ if translate_button:
 
 if translate_and_summarize_button:
     if input_text:
-        src_lang = "en" if lang_direction == "EN to KR" else "ko"
-        tgt_lang = "ko" if lang_direction == "EN to KR" else "en"
-        translated_text = translate_text(input_text, src_lang, tgt_lang)
+        translated_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en", "ko")
         st.subheader("Translated Text:")
         st.write(translated_text)
 
+        setup_nltk_for_summarization() 
         summarized_text = summarize_text(translated_text)
         st.subheader("Summarized Text:")
         st.write(summarized_text)
