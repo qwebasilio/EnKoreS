@@ -1,15 +1,18 @@
 import streamlit as st
 import pandas as pd
 from easynmt import EasyNMT
-import os
 import requests
 from io import StringIO
+import nltk
+import os
 
-# Initialize EasyNMT with custom cache directory
-cache_dir = os.path.expanduser("~/.cache/easynmt_models")
-model = EasyNMT('opus-mt', cache_folder=cache_dir)
+nltk_data_dir = os.path.expanduser("~/nltk_data")
+os.makedirs(nltk_data_dir, exist_ok=True)
+nltk.data.path.append(nltk_data_dir)
+nltk.download('punkt', download_dir=nltk_data_dir)
 
-# CSV URL for translation pairs
+model = EasyNMT('opus-mt')
+
 csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
 response = requests.get(csv_url)
 
@@ -24,7 +27,6 @@ VALID_LANG_CODES = ["en", "ko"]
 def translate_text(text, src_lang, tgt_lang):
     if src_lang not in VALID_LANG_CODES or tgt_lang not in VALID_LANG_CODES:
         raise ValueError(f"Invalid language codes: src_lang={src_lang}, tgt_lang={tgt_lang}")
-    
     translated_text = model.translate(text, source_lang=src_lang, target_lang=tgt_lang)
     return translated_text
 
@@ -40,7 +42,6 @@ def get_translation(input_text, data, lang_column="question2_ko"):
         return translated_text
     return ""
 
-# Streamlit interface setup
 st.title("EnKoreS")
 
 def switch_languages():
@@ -57,7 +58,6 @@ if "input_text" not in st.session_state:
 if "output_text" not in st.session_state:
     st.session_state.output_text = ""
 
-# Layout columns
 col1, col_switch, col2 = st.columns([4, 1, 4])
 
 with col1:
@@ -70,8 +70,10 @@ with col1:
     )
     if input_text != st.session_state.input_text:
         st.session_state.input_text = input_text
-        lang_dir = st.session_state.lang_direction
-        st.session_state.output_text = get_translation(st.session_state.input_text, data)
+        if st.session_state.lang_direction == "EN to KR":
+            st.session_state.output_text = get_translation(st.session_state.input_text, data)
+        else:
+            st.session_state.output_text = translate_text(st.session_state.input_text, "ko", "en")
 
 with col_switch:
     st.button("⇋", on_click=switch_languages, use_container_width=True)
@@ -85,8 +87,3 @@ with col2:
         disabled=True,
         key="output_text_box"
     )
-
-# Updating live translation
-if input_text != st.session_state.input_text:
-    st.session_state.output_text = get_translation(st.session_state.input_text, data)
-    st.write(f"Live Translation: {st.session_state.output_text}")
