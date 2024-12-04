@@ -1,35 +1,77 @@
-import pandas as pd
 import streamlit as st
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+import pandas as pd
+from asian_bart import AsianBartTokenizer, AsianBartForConditionalGeneration
 import requests
-from io import StringIO  # Import StringIO from the io module
+from io import StringIO
 
-# Load the pre-trained KETI-AIR/ke-t5-small model and tokenizer from Hugging Face
-model = AutoModelForSeq2SeqLM.from_pretrained("KETI-AIR/ke-t5-small")
-tokenizer = AutoTokenizer.from_pretrained("KETI-AIR/ke-t5-small", legacy=False)
+model_name = "hyunwoongko/asian-bart-ecjk"
+tokenizer = AsianBartTokenizer.from_pretrained(model_name)
+model = AsianBartForConditionalGeneration.from_pretrained(model_name)
 
-# Function to translate text using the model
-def translate_text(input_text):
-    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
-    outputs = model.generate(**inputs)
-    translated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return translated_text
+csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
+response = requests.get(csv_url)
 
-# Load the dataset from GitHub
-dataset_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/main/sample_dataset.csv"  # Update this with the actual URL to your dataset
-response = requests.get(dataset_url)
-data = pd.read_csv(StringIO(response.text))  # Use StringIO from the io module to read the CSV data
+if response.status_code == 200:
+    data = pd.read_csv(StringIO(response.text))
+else:
+    st.error("Failed to load CSV file from GitHub.")
+    data = None
 
-# Display the dataset
-st.title("Text Translation with Fine-Tuned Model")
-st.write("Dataset Overview:")
-st.dataframe(data.head())  # Show the first few rows of the dataset
+def translate_with_asian_bart(input_text, lang_direction):
+    if lang_direction == "EN to KR":
+        src_lang, tgt_lang = "en_XX", "ko_KR"
+    else:
+        src_lang, tgt_lang = "ko_KR", "en_XX"
+    
+    inputs = tokenizer(f"<{src_lang}> {input_text} <{tgt_lang}>", return_tensors="pt", padding=True, truncation=True)
+    outputs = model.generate(**inputs, max_length=512)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-# UI for input text
-input_text = st.text_area("Enter text to translate:")
+if "lang_direction" not in st.session_state:
+    st.session_state.lang_direction = "EN to KR"
+if "input_text" not in st.session_state:
+    st.session_state.input_text = ""
+if "output_text" not in st.session_state:
+    st.session_state.output_text = ""
 
-# Translate text when the button is clicked
-if input_text:
-    translated_text = translate_text(input_text)
-    st.write("Translated Text:")
-    st.write(translated_text)
+def switch_languages():
+    if st.session_state.lang_direction == "EN to KR":
+        st.session_state.lang_direction = "KR to EN"
+    else:
+        st.session_state.lang_direction = "EN to KR"
+    st.session_state.input_text, st.session_state.output_text = st.session_state.output_text, st.session_state.input_text
+
+st.title("EnKoreS")
+
+col1, col_switch, col2 = st.columns([4, 1, 4])
+
+with col1:
+    st.header("English" if st.session_state.lang_direction == "EN to KR" else "Korean", anchor="center")
+    input_text = st.text_area(
+        "",
+        value=st.session_state.input_text,
+        height=200,
+        key="input_text_box",
+        label_visibility="collapsed",
+        help="Type text to be translated."
+    )
+    if input_text != st.session_state.input_text:
+        st.session_state.input_text = input_text
+        st.session_state.output_text = translate_with_asian_bart(st.session_state.input_text, st.session_state.lang_direction)
+
+with col_switch:
+    st.button("⇋", on_click=switch_languages, use_container_width=True)
+
+with col2:
+    st.header("Korean" if st.session_state.lang_direction == "EN to KR" else "English", anchor="center")
+    st.text_area(
+        "",
+        value=st.session_state.output_text,
+        height=200,
+        disabled=True,
+        key="output_text_box"
+    )
+
+if input_text != st.session_state.input_text:
+    st.session_state.output_text = translate_with_asian_bart(st.session_state.input_text, st.session_state.lang_direction)
+    st.experimental_rerun()
