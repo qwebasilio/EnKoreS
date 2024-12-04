@@ -35,7 +35,7 @@ def get_translation(input_text, data, source_column, target_column):
         translated_text = existing_translation[target_column].iloc[0]
         st.write(f"Found existing translation: {translated_text}")
     else:
-        src_lang = source_column.split("_")[1]
+        src_lang = source_column.split("_")[1] 
         tgt_lang = target_column.split("_")[1]
         translated_text = translate_text(input_text, src_lang, tgt_lang)
         st.write(f"Generated new translation: {translated_text}")
@@ -55,10 +55,11 @@ if "output_text" not in st.session_state:
 
 @st.cache_data
 def load_data():
+    url = 'https://raw.githubusercontent.com/qwebasilio/EnKoreS/refs/heads/master/sample_dataset.csv'
     try:
-        return pd.read_csv('your_file.csv') 
+        return pd.read_csv(url)
     except Exception as e:
-        st.error(f"Error loading data: {e}")
+        st.error(f"Error loading data from GitHub: {e}")
         return pd.DataFrame(columns=['question2_en', 'question2_ko'])
 
 data = load_data()
