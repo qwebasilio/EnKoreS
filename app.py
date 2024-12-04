@@ -2,7 +2,6 @@ import streamlit as st
 import nltk
 import os
 from easynmt import EasyNMT
-import pandas as pd
 import heapq
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
@@ -57,24 +56,6 @@ def summarize_text(text, num_sentences=3):
     summary = [sentences[i] for i in sorted(best_sentences)]
     return ' '.join(summary)
 
-@st.cache_data
-def get_translation(input_text, data, source_column, target_column):
-    if not input_text.strip():
-        return ""
-    if source_column not in data.columns or target_column not in data.columns:
-        st.warning(f"The provided data does not contain the columns: {source_column} and {target_column}. Using live translation.")
-        return translate_text(input_text, source_column.split("_")[1], target_column.split("_")[1])
-    
-    existing_translation = data[data[source_column] == input_text]
-    if not existing_translation.empty:
-        translated_text = existing_translation[target_column].iloc[0]
-    else:
-        src_lang = source_column.split("_")[1]
-        tgt_lang = target_column.split("_")[1]
-        translated_text = translate_text(input_text, src_lang, tgt_lang)
-    
-    return translated_text
-
 st.title("EnKoreS")
 
 st.sidebar.title("Settings")
@@ -87,35 +68,15 @@ if "input_text" not in st.session_state:
 if "output_text" not in st.session_state:
     st.session_state.output_text = ""
 
-@st.cache_data
-def load_data():
-    url = 'https://raw.githubusercontent.com/qwebasilio/EnKoreS/refs/heads/master/sample_dataset.csv'
-    try:
-        return pd.read_csv(url)
-    except Exception as e:
-        st.error(f"Error loading data from GitHub: {e}")
-        return pd.DataFrame(columns=['question2_en', 'question2_ko'])
-
-data = load_data()
-
-if lang_direction == "EN to KR":
-    source_col = "question2_en"
-    target_col = "question2_ko"
-else:
-    source_col = "question2_ko"
-    target_col = "question2_en"
-
-if input_text != st.session_state.input_text:
-    st.session_state.input_text = input_text
-    st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
-
 translate_button = st.button("Translate")
 
 translate_and_summarize_button = st.button("Translate & Summarize")
 
 if translate_button:
     if input_text:
-        st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
+        src_lang = "en" if lang_direction == "EN to KR" else "ko"
+        tgt_lang = "ko" if lang_direction == "EN to KR" else "en"
+        st.session_state.output_text = translate_text(input_text, src_lang, tgt_lang)
         st.subheader("Translated Text:")
         st.write(st.session_state.output_text)
     else:
@@ -123,7 +84,9 @@ if translate_button:
 
 if translate_and_summarize_button:
     if input_text:
-        translated_text = get_translation(input_text, data, source_col, target_col)
+        src_lang = "en" if lang_direction == "EN to KR" else "ko"
+        tgt_lang = "ko" if lang_direction == "EN to KR" else "en"
+        translated_text = translate_text(input_text, src_lang, tgt_lang)
         st.subheader("Translated Text:")
         st.write(translated_text)
 
