@@ -16,7 +16,7 @@ except Exception as e:
 
 model = EasyNMT('opus-mt')
 
-VALID_LANG_CODES = ['en', 'ko']
+VALID_LANG_CODES = ['ko', 'en']
 
 def translate_text(text, src_lang, tgt_lang):
     if src_lang not in VALID_LANG_CODES or tgt_lang not in VALID_LANG_CODES:
