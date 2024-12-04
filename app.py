@@ -19,15 +19,17 @@ model = EasyNMT('opus-mt')
 VALID_LANG_CODES = ['ko', 'en']
 
 def translate_text(text, src_lang, tgt_lang):
-    if src_lang == "en" and tgt_lang == "ko":
-        translated_text = model.translate(text, source_lang="en", target_lang="ko")
-    elif src_lang == "ko" and tgt_lang == "en":
-        translated_text = model.translate(text, source_lang="ko", target_lang="en")
+    # Check if source and target languages are either EN -> KO or KO -> EN
+    if (src_lang == "en" and tgt_lang == "ko") or (src_lang == "ko" and tgt_lang == "en"):
+        # Reverse the source and target dynamically
+        if src_lang == "en" and tgt_lang == "ko":
+            translated_text = model.translate(text, source_lang="en", target_lang="ko")
+        elif src_lang == "ko" and tgt_lang == "en":
+            translated_text = model.translate(text, source_lang="ko", target_lang="en")
     else:
         raise ValueError(f"Unsupported language pair: {src_lang} to {tgt_lang}")
     
     return translated_text
-
 
 def get_translation(input_text, data, source_column, target_column):
     if not input_text.strip():
