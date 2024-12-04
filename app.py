@@ -1,9 +1,15 @@
 import streamlit as st
 import pandas as pd
 from easynmt import EasyNMT
+import os
+import requests
+from io import StringIO
 
-model = EasyNMT('opus-mt')
+# Initialize EasyNMT with custom cache directory
+cache_dir = os.path.expanduser("~/.cache/easynmt_models")
+model = EasyNMT('opus-mt', cache_folder=cache_dir)
 
+# CSV URL for translation pairs
 csv_url = "https://raw.githubusercontent.com/qwebasilio/EnKoreS/master/sample_dataset.csv"
 response = requests.get(csv_url)
 
@@ -34,6 +40,7 @@ def get_translation(input_text, data, lang_column="question2_ko"):
         return translated_text
     return ""
 
+# Streamlit interface setup
 st.title("EnKoreS")
 
 def switch_languages():
@@ -50,6 +57,7 @@ if "input_text" not in st.session_state:
 if "output_text" not in st.session_state:
     st.session_state.output_text = ""
 
+# Layout columns
 col1, col_switch, col2 = st.columns([4, 1, 4])
 
 with col1:
@@ -78,6 +86,7 @@ with col2:
         key="output_text_box"
     )
 
+# Updating live translation
 if input_text != st.session_state.input_text:
     st.session_state.output_text = get_translation(st.session_state.input_text, data)
     st.write(f"Live Translation: {st.session_state.output_text}")
