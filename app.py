@@ -68,10 +68,12 @@ def get_translation(input_text, data, source_column, target_column):
     existing_translation = data[data[source_column] == input_text]
     if not existing_translation.empty:
         translated_text = existing_translation[target_column].iloc[0]
+        st.write(f"Found existing translation: {translated_text}")
     else:
         src_lang = source_column.split("_")[1]
         tgt_lang = target_column.split("_")[1]
         translated_text = translate_text(input_text, src_lang, tgt_lang)
+        st.write(f"Generated new translation: {translated_text}")
     
     return translated_text
 
@@ -89,11 +91,11 @@ if "output_text" not in st.session_state:
 
 @st.cache_data
 def load_data():
-    url = 'https://raw.githubusercontent.com/qwebasilio/EnKoreS/refs/heads/master/sample_dataset.csv'
+    file_path = 'path_to_your_local_csv_file.csv'
     try:
-        return pd.read_csv(url)
+        return pd.read_csv(file_path)
     except Exception as e:
-        st.error(f"Error loading data from GitHub: {e}")
+        st.error(f"Error loading data from file: {e}")
         return pd.DataFrame(columns=['question2_en', 'question2_ko'])
 
 data = load_data()
@@ -117,6 +119,7 @@ if translate_button:
     if input_text:
         st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
         st.subheader("Translated Text:")
+        st.write(st.session_state.output_text) 
     else:
         st.warning("Please enter text to translate.")
 
