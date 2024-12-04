@@ -7,3 +7,4 @@ torchaudio
 sentencepiece
 easynmt
 nltk
+deepl
