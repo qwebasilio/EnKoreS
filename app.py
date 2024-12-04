@@ -14,13 +14,13 @@ try:
 except Exception as e:
     st.error(f"Error downloading NLTK resources: {e}")
 
-model = EasyNMT('opus-mt-ko-en')
+model = EasyNMT('opus-mt')
 
 VALID_LANG_CODES = ['ko', 'en']
 
 def translate_text(text, src_lang, tgt_lang):
     if src_lang == "en" and tgt_lang == "ko":
-        translated_text = model.translate(text, source_lang="en", target_lang="ko")
+        translated_text = model.translate(text, target_lang="ko", source_lang="en")
     elif src_lang == "ko" and tgt_lang == "en":
         translated_text = model.translate(text, source_lang="ko", target_lang="en")
     else:
