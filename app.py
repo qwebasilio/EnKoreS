@@ -5,10 +5,8 @@ from easynmt import EasyNMT
 import pandas as pd
 from transformers import pipeline
 
-# Initialize Hugging Face summarizer
 summarizer = pipeline('summarization', model='sshleifer/distilbart-cnn-12-6')
 
-# Initialize the EasyNMT model (m2m_100_418M)
 model = EasyNMT('m2m_100_418M')
 
 nltk_data_dir = os.path.expanduser("~/nltk_data")
@@ -23,18 +21,17 @@ except Exception as e:
 
 VALID_LANG_CODES = ['ko', 'en']
 
+@st.cache_data
 def translate_text(text, src_lang, tgt_lang):
     if src_lang == "en" and tgt_lang == "ko":
-        translated_text = model.translate(text, source_lang="en", target_lang="ko")
+        return model.translate(text, source_lang="en", target_lang="ko")
     elif src_lang == "ko" and tgt_lang == "en":
-        translated_text = model.translate(text, source_lang="ko", target_lang="en")
+        return model.translate(text, source_lang="ko", target_lang="en")
     else:
         raise ValueError(f"Unsupported language pair: {src_lang} to {tgt_lang}")
     
-    return translated_text
-
+@st.cache_data
 def summarize_text(text):
-    # Summarize the translated text
     summary = summarizer(text, max_length=150, min_length=50, do_sample=False)
     return summary[0]['summary_text']
 
@@ -46,12 +43,11 @@ def get_translation(input_text, data, source_column, target_column):
         return translate_text(input_text, source_column.split("_")[1], target_column.split("_")[1])
     existing_translation = data[data[source_column] == input_text]
     if not existing_translation.empty:
-        translated_text = existing_translation[target_column].iloc[0]
+        return existing_translation[target_column].iloc[0]
     else:
-        src_lang = source_column.split("_")[1] 
+        src_lang = source_column.split("_")[1]
         tgt_lang = target_column.split("_")[1]
-        translated_text = translate_text(input_text, src_lang, tgt_lang)
-    return translated_text
+        return translate_text(input_text, src_lang, tgt_lang)
 
 st.title("EnKoreS")
 
@@ -83,7 +79,6 @@ else:
     source_col = "question2_ko"
     target_col = "question2_en"
 
-# Buttons for translation and summarization
 translate_button = st.button("Translate")
 summarize_button = st.button("Translate and Summarize")
 
@@ -91,10 +86,8 @@ if input_text != st.session_state.input_text:
     st.session_state.input_text = input_text
     st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
 
-# If Translate button is clicked
 if translate_button:
     if input_text:
-        # Perform translation
         st.session_state.output_text = get_translation(input_text, data, source_col, target_col)
         st.subheader("Translated Text:")
         st.write(st.session_state.output_text)
