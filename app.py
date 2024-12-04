@@ -67,7 +67,7 @@ translate_and_summarize_button = st.button("Translate & Summarize")
 
 if translate_button:
     if input_text:
-        st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en", "ko")
+        st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
         st.subheader("Translated Text:")
         st.write(st.session_state.output_text)
     else:
@@ -75,7 +75,7 @@ if translate_button:
 
 if translate_and_summarize_button:
     if input_text:
-        translated_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en", "ko")
+        translated_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
         st.subheader("Translated Text:")
         st.write(translated_text)
 
