@@ -5,10 +5,15 @@ from googletrans import Translator
 from nltk.corpus import stopwords
 import heapq
 
-nltk.download('punkt_tab')
+nltk.download('punkt')
 nltk.download('stopwords')
 
 translator = Translator()
+
+korean_stopwords = [
+    "이", "그", "저", "은", "는", "이었", "으로", "에서", "를", "에", "와", "과", "도", "로", "의", "게",
+    "을", "한", "들", "임", "다", "고", "하", "되", "있", "등", "을", "입니다", "합니다"
+]
 
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
@@ -22,13 +27,15 @@ def tokenize_text(text, lang):
     if lang == "english":
         return sent_tokenize(text, language="english")
     elif lang == "korean":
-        return text.split('. ')  # Simplified tokenization for Korean
+        return text.split(". ")  # Fallback for simple sentence splitting
     else:
         return []
 
 def summarize_text(text, num_sentences=3, lang="english"):
     sentences = tokenize_text(text, lang)
     stop_words = set(stopwords.words(lang if lang in stopwords.fileids() else 'english'))
+    if lang == "korean":
+        stop_words.update(korean_stopwords)
     word_frequencies = {}
     for sentence in sentences:
         words = word_tokenize(sentence.lower())
@@ -78,7 +85,8 @@ if st.session_state.output_text:
 
     if st.button("Summarize"):
         lang = "english" if st.session_state.lang_direction == "KO to EN" else "korean"
-        st.session_state.summary_text = summarize_text(st.session_state.output_text, lang=lang)
+        if st.session_state.output_text.strip():
+            st.session_state.summary_text = summarize_text(st.session_state.output_text, lang=lang)
 
 if st.session_state.summary_text:
     st.text_area("Summarized Text:", value=st.session_state.summary_text, height=150, disabled=True, key="summary_box")
