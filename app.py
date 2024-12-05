@@ -1,17 +1,16 @@
 import streamlit as st
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
+from googletrans import Translator
 from nltk.corpus import stopwords
 import heapq
-from konlpy.tag import Mecab
-from googletrans import Translator
+from konlpy.tag import Okt
 
-nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('stopwords')
 
-mecab = Mecab()
-
 translator = Translator()
+okt = Okt()
 
 korean_stopwords = [
     "이", "그", "저", "은", "는", "이었", "으로", "에서", "를", "에", "와", "과", "도", "로", "의", "게",
@@ -30,45 +29,25 @@ def tokenize_text(text, lang):
     if lang == "english":
         return sent_tokenize(text, language="english")
     elif lang == "korean":
-        return mecab.sentences(text)
+        return okt.sent_tokenize(text)
     else:
-        return text.split(". ")
+        return []
 
 def summarize_text(text, num_sentences=3, lang="english"):
     sentences = tokenize_text(text, lang)
-    
-    # Determine stopwords based on language
-    if lang == "english":
-        stop_words = set(stopwords.words("english"))
-    elif lang == "korean":
-        stop_words = set(korean_stopwords)
-    else:
-        stop_words = set()
-    
+    stop_words = set(stopwords.words(lang if lang in stopwords.fileids() else 'english'))
+    if lang == "korean":
+        stop_words.update(korean_stopwords)
     word_frequencies = {}
     for sentence in sentences:
-        if lang == "english":
-            words = word_tokenize(sentence.lower())
-        elif lang == "korean":
-            words = mecab.morphs(sentence.lower())
-        else:
-            words = sentence.lower().split()
-        
+        words = word_tokenize(sentence.lower())
         for word in words:
             if word not in stop_words and word.isalnum():
                 word_frequencies[word] = word_frequencies.get(word, 0) + 1
-
     sentence_scores = {}
     for i, sentence in enumerate(sentences):
-        if lang == "english":
-            words = word_tokenize(sentence.lower())
-        elif lang == "korean":
-            words = mecab.morphs(sentence.lower())
-        else:
-            words = sentence.lower().split()
-        
+        words = word_tokenize(sentence.lower())
         sentence_scores[i] = sum(word_frequencies.get(word, 0) for word in words)
-    
     best_sentences = heapq.nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
     summary = ' '.join(sentences[i] for i in sorted(best_sentences))
     return summary
@@ -92,7 +71,7 @@ if lang_direction != st.session_state.lang_direction:
     st.session_state.output_text = ""
     st.session_state.summary_text = ""
 
-st.session_state.input_text = st.text_area("Enter text to translate:", value=st.session_state.input_text)
+input_text = st.text_area("Enter text to translate:", value=st.session_state.input_text)
 
 if st.button("Translate"):
     if st.session_state.input_text.strip():
