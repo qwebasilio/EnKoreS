@@ -46,7 +46,6 @@ translate_button = st.button("Translate")
 if translate_button:
     if input_text:
         st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
-        st.subheader("Translated Text:")
         st.write(st.session_state.output_text)
     else:
         st.warning("Please enter text to translate.")
