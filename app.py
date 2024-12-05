@@ -1,39 +1,67 @@
 import streamlit as st
-from transformers import OpenAIGPTTokenizer, OpenAIGPTModel
-import torch
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+from googletrans import Translator
+from nltk.corpus import stopwords
+import heapq
 
-tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
-tokenizer.pad_token = tokenizer.eos_token  # Set eos_token as the pad_token
-model = OpenAIGPTModel.from_pretrained("openai-gpt")
+nltk.download('punkt')
+nltk.download('stopwords')
 
-def translate_text_gpt(input_text, src_lang, tgt_lang):
-    prompt = f"Translate this text from {src_lang} to {tgt_lang}: {input_text}"
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, padding=True, max_length=512)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    last_hidden_states = outputs.last_hidden_state
-    translated_text = tokenizer.decode(last_hidden_states[0], skip_special_tokens=True)
-    return translated_text
+translator = Translator()
 
-st.title("Translation and Summarization with GPT")
+def translate_text_google(input_text, src_lang, tgt_lang):
+    translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
+    return translation.text
+
+def summarize_text(text, num_sentences=3):
+    sentences = sent_tokenize(text)
+    stop_words = set(stopwords.words('english'))
+    word_frequencies = {}
+    
+    for sentence in sentences:
+        words = word_tokenize(sentence.lower())
+        for word in words:
+            if word not in stop_words and word.isalnum():
+                word_frequencies[word] = word_frequencies.get(word, 0) + 1
+    
+    sentence_scores = {}
+    for i, sentence in enumerate(sentences):
+        words = word_tokenize(sentence.lower())
+        sentence_scores[i] = sum(word_frequencies.get(word, 0) for word in words)
+    
+    best_sentences = heapq.nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
+    summary = ' '.join(sentences[i] for i in sorted(best_sentences))
+    return summary
+
+st.title("Translation and Summarization")
 
 lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KO", "KO to EN"])
 
 input_text = st.text_area("Enter text to translate:")
 
-if input_text:
-    if lang_direction == "EN to KO":
-        translated_text = translate_text_gpt(input_text, "English", "Korean")
-    elif lang_direction == "KO to EN":
-        translated_text = translate_text_gpt(input_text, "Korean", "English")
-    
-    st.write("Translated Text:")
-    st.write(translated_text)
+if "input_text" not in st.session_state:
+    st.session_state.input_text = ""
+if "output_text" not in st.session_state:
+    st.session_state.output_text = ""
 
-    if translated_text:
-        summarize_button = st.button("Summarize")
-        if summarize_button:
-            summarizer = pipeline("summarization", model="openai-community/openai-gpt")
-            summary = summarizer(translated_text, max_length=150, min_length=30, do_sample=False)[0]['summary_text']
-            st.write("Summarized Text:")
-            st.write(summary)
+if input_text != st.session_state.input_text:
+    st.session_state.input_text = input_text
+    st.session_state.output_text = translate_text_google(input_text, "en", "ko" if lang_direction == "EN to KO" else "ko")
+
+translate_button = st.button("Translate")
+
+if translate_button:
+    if input_text:
+        st.session_state.output_text = translate_text_google(input_text, "en", "ko" if lang_direction == "EN to KO" else "ko")
+        st.write("Translated Text:")
+        st.write(st.session_state.output_text)
+    else:
+        st.warning("Please enter text to translate.")
+
+if st.session_state.output_text:
+    summarize_button = st.button("Summarize")
+    if summarize_button:
+        summary = summarize_text(st.session_state.output_text)
+        st.write("Summarized Text:")
+        st.write(summary)
