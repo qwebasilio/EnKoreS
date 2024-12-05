@@ -12,6 +12,8 @@ nltk.data.path.append(nltk_data_dir)
 
 if not os.path.exists(os.path.join(nltk_data_dir, "tokenizers", "punkt")):
     nltk.download('punkt', download_dir=nltk_data_dir)
+if not os.path.exists(os.path.join(nltk_data_dir, "tokenizers", "punkt_tab")):
+    nltk.download('punkt_tab', download_dir=nltk_data_dir)
 if not os.path.exists(os.path.join(nltk_data_dir, "corpora", "stopwords")):
     nltk.download('stopwords', download_dir=nltk_data_dir)
 
