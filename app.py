@@ -5,7 +5,7 @@ from googletrans import Translator
 from nltk.corpus import stopwords
 import heapq
 
-nltk.download('punkt_tab')
+nltk.download('punkt')
 nltk.download('stopwords')
 
 translator = Translator()
