@@ -61,13 +61,19 @@ if "output_text" not in st.session_state:
 
 if input_text != st.session_state.input_text:
     st.session_state.input_text = input_text
-    st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
+    if lang_direction == "EN to KR":
+        st.session_state.output_text = translate_text(input_text, "en", "ko")
+    else:
+        st.session_state.output_text = translate_text(input_text, "ko", "en")
 
 translate_button = st.button("Translate")
 
 if translate_button:
     if input_text:
-        st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
+        if lang_direction == "EN to KR":
+            st.session_state.output_text = translate_text(input_text, "en", "ko")
+        else:
+            st.session_state.output_text = translate_text(input_text, "ko", "en")
         st.write("Translated Text:")
         st.write(st.session_state.output_text)
     else:
