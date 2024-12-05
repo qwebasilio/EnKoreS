@@ -1,89 +1,38 @@
 import streamlit as st
-import nltk
-import os
-from easynmt import EasyNMT
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.corpus import stopwords
-import heapq
+from transformers import OpenAIGPTTokenizer, OpenAIGPTModel
+import torch
 
-nltk_data_dir = os.path.expanduser("~/nltk_data")
-os.makedirs(nltk_data_dir, exist_ok=True)
-nltk.data.path.append(nltk_data_dir)
+tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
+model = OpenAIGPTModel.from_pretrained("openai-gpt")
 
-if not os.path.exists(os.path.join(nltk_data_dir, "tokenizers", "punkt_tab")):
-    nltk.download('punkt_tab', download_dir=nltk_data_dir)
-if not os.path.exists(os.path.join(nltk_data_dir, "tokenizers", "punkt")):
-    nltk.download('punkt', download_dir=nltk_data_dir)
-if not os.path.exists(os.path.join(nltk_data_dir, "corpora", "stopwords")):
-    nltk.download('stopwords', download_dir=nltk_data_dir)
-
-model = EasyNMT('m2m_100_418M')
-
-def translate_text(text, src_lang, tgt_lang):
-    if src_lang == "en" and tgt_lang == "ko":
-        translated_text = model.translate(text, source_lang="en", target_lang="ko")
-    elif src_lang == "ko" and tgt_lang == "en":
-        translated_text = model.translate(text, source_lang="ko", target_lang="en")
-    else:
-        raise ValueError(f"Unsupported language pair: {src_lang} to {tgt_lang}")
+def translate_text_gpt(input_text, src_lang, tgt_lang):
+    prompt = f"Translate this text from {src_lang} to {tgt_lang}: {input_text}"
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    last_hidden_states = outputs.last_hidden_state
+    translated_text = tokenizer.decode(last_hidden_states[0], skip_special_tokens=True)
     return translated_text
 
-def summarize_text(text, num_sentences=3):
-    sentences = sent_tokenize(text)
-    stop_words = set(stopwords.words('english'))
-    word_frequencies = {}
-    for sentence in sentences:
-        words = word_tokenize(sentence.lower())
-        for word in words:
-            if word not in stop_words and word.isalnum():
-                word_frequencies[word] = word_frequencies.get(word, 0) + 1
+st.title("Translation and Summarization with GPT")
 
-    sentence_scores = {}
-    for i, sentence in enumerate(sentences):
-        words = word_tokenize(sentence.lower())
-        sentence_scores[i] = sum(word_frequencies.get(word, 0) for word in words)
-
-    best_sentences = heapq.nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
-    summary = ' '.join(sentences[i] for i in sorted(best_sentences))
-    return summary
-
-st.title("EnKoreS")
-
-st.sidebar.title("Settings")
-lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KR", "KR to EN"])
-st.session_state.lang_direction = lang_direction
+lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KO", "KO to EN"])
 
 input_text = st.text_area("Enter text to translate:")
-if "input_text" not in st.session_state:
-    st.session_state.input_text = ""
-if "output_text" not in st.session_state:
-    st.session_state.output_text = ""
 
-if input_text != st.session_state.input_text:
-    st.session_state.input_text = input_text
-    if lang_direction == "EN to KR":
-        st.session_state.output_text = translate_text(input_text, "en", "ko")
-    else:
-        st.session_state.output_text = translate_text(input_text, "ko", "en")
+if input_text:
+    if lang_direction == "EN to KO":
+        translated_text = translate_text_gpt(input_text, "English", "Korean")
+    elif lang_direction == "KO to EN":
+        translated_text = translate_text_gpt(input_text, "Korean", "English")
+    
+    st.write("Translated Text:")
+    st.write(translated_text)
 
-translate_button = st.button("Translate")
-
-if translate_button:
-    if input_text:
-        if lang_direction == "EN to KR":
-            st.session_state.output_text = translate_text(input_text, "en", "ko")
-        else:
-            st.session_state.output_text = translate_text(input_text, "ko", "en")
-        st.write("Translated Text:")
-        st.write(st.session_state.output_text)
-    else:
-        st.warning("Please enter text to translate.")
-
-if st.session_state.output_text:
-    summarize_button = st.button("Summarize")
-    if summarize_button:
-        summary = summarize_text(st.session_state.output_text)  # Summarize the translated text
-        st.write("Summarized Text:")
-        st.write(summary)
-
-st.text_area("Translated Text:", value=st.session_state.output_text, height=150)
+    if translated_text:
+        summarize_button = st.button("Summarize")
+        if summarize_button:
+            summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+            summary = summarizer(translated_text, max_length=150, min_length=30, do_sample=False)[0]['summary_text']
+            st.write("Summarized Text:")
+            st.write(summary)
