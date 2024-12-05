@@ -18,8 +18,16 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
+def tokenize_text(text, lang):
+    if lang == "english":
+        return sent_tokenize(text, language="english")
+    elif lang == "korean":
+        return text.split('. ')  # Simplified tokenization for Korean
+    else:
+        return []
+
 def summarize_text(text, num_sentences=3, lang="english"):
-    sentences = sent_tokenize(text, language=lang)
+    sentences = tokenize_text(text, lang)
     stop_words = set(stopwords.words(lang if lang in stopwords.fileids() else 'english'))
     word_frequencies = {}
     for sentence in sentences:
@@ -35,7 +43,7 @@ def summarize_text(text, num_sentences=3, lang="english"):
     summary = ' '.join(sentences[i] for i in sorted(best_sentences))
     return summary
 
-st.title("Translation and Summarization")
+st.title("EnKoreS")
 
 if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KO"
@@ -63,7 +71,7 @@ if st.button("Translate"):
         src_lang = "en" if st.session_state.lang_direction == "EN to KO" else "ko"
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
         st.session_state.output_text = translate_text_google(input_text, src_lang, tgt_lang)
-        st.session_state.summary_text = ""  # Clear summary when new translation is done
+        st.session_state.summary_text = ""
 
 if st.session_state.output_text:
     st.text_area("Translated Text:", value=st.session_state.output_text, height=150, disabled=True, key="translated_box")
