@@ -11,8 +11,12 @@ nltk.download('stopwords')
 translator = Translator()
 
 def translate_text_google(input_text, src_lang, tgt_lang):
-    translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
-    return translation.text
+    try:
+        translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
+        return translation.text
+    except Exception as e:
+        st.error(f"Error during translation: {e}")
+        return ""
 
 def summarize_text(text, num_sentences=3):
     sentences = sent_tokenize(text)
