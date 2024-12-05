@@ -3,6 +3,7 @@ from transformers import OpenAIGPTTokenizer, OpenAIGPTModel
 import torch
 
 tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
+tokenizer.pad_token = tokenizer.eos_token  # Set eos_token as the pad_token
 model = OpenAIGPTModel.from_pretrained("openai-gpt")
 
 def translate_text_gpt(input_text, src_lang, tgt_lang):
@@ -32,7 +33,7 @@ if input_text:
     if translated_text:
         summarize_button = st.button("Summarize")
         if summarize_button:
-            summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+            summarizer = pipeline("summarization", model="openai-community/openai-gpt")
             summary = summarizer(translated_text, max_length=150, min_length=30, do_sample=False)[0]['summary_text']
             st.write("Summarized Text:")
             st.write(summary)
