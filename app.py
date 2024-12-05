@@ -10,24 +10,23 @@ nltk_data_dir = os.path.expanduser("~/nltk_data")
 os.makedirs(nltk_data_dir, exist_ok=True)
 nltk.data.path.append(nltk_data_dir)
 
-if not os.path.exists(os.path.join(nltk_data_dir, "tokenizers", "punkt")):
-    nltk.download('punkt', download_dir=nltk_data_dir)
 if not os.path.exists(os.path.join(nltk_data_dir, "tokenizers", "punkt_tab")):
     nltk.download('punkt_tab', download_dir=nltk_data_dir)
+if not os.path.exists(os.path.join(nltk_data_dir, "tokenizers", "punkt")):
+    nltk.download('punkt', download_dir=nltk_data_dir)
 if not os.path.exists(os.path.join(nltk_data_dir, "corpora", "stopwords")):
     nltk.download('stopwords', download_dir=nltk_data_dir)
 
 model = EasyNMT('m2m_100_418M')
 
-def split_text_into_sentences(text):
-    return sent_tokenize(text)
-
-def translate_text_in_chunks(text, src_lang, tgt_lang):
-    sentences = split_text_into_sentences(text)
-    translated_sentences = [
-        model.translate(sentence, source_lang=src_lang, target_lang=tgt_lang) for sentence in sentences
-    ]
-    return " ".join(translated_sentences)
+def translate_text(text, src_lang, tgt_lang):
+    if src_lang == "en" and tgt_lang == "ko":
+        translated_text = model.translate(text, source_lang="en", target_lang="ko")
+    elif src_lang == "ko" and tgt_lang == "en":
+        translated_text = model.translate(text, source_lang="ko", target_lang="en")
+    else:
+        raise ValueError(f"Unsupported language pair: {src_lang} to {tgt_lang}")
+    return translated_text
 
 def summarize_text(text, num_sentences=3):
     sentences = sent_tokenize(text)
@@ -62,13 +61,13 @@ if "output_text" not in st.session_state:
 
 if input_text != st.session_state.input_text:
     st.session_state.input_text = input_text
-    st.session_state.output_text = translate_text_in_chunks(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
+    st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
 
 translate_button = st.button("Translate")
 
 if translate_button:
     if input_text:
-        st.session_state.output_text = translate_text_in_chunks(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
+        st.session_state.output_text = translate_text(input_text, "en", "ko" if lang_direction == "EN to KR" else "en")
         st.write("Translated Text:")
         st.write(st.session_state.output_text)
     else:
@@ -77,7 +76,7 @@ if translate_button:
 if st.session_state.output_text:
     summarize_button = st.button("Summarize")
     if summarize_button:
-        summary = summarize_text(st.session_state.output_text)
+        summary = summarize_text(st.session_state.output_text)  # Summarize the translated text
         st.write("Summarized Text:")
         st.write(summary)
 
