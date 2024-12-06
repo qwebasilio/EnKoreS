@@ -1,6 +1,4 @@
 transformers==4.46.3
-pandas
-requests
 torch
 torchvision
 torchaudio
