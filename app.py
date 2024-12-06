@@ -11,7 +11,7 @@ if "summarized_text" not in st.session_state:
     st.session_state.summarized_text = ""
 
 def add_spaces_between_sentences(text):
-    text = re.sub(r'(?<=[a-zA-Z])\.(?=[a-zA-Z])', '. ', text)
+    text = re.sub(r'([.!?])(?=\S)', r'\1 ', text)
     return text
 
 def translate_text_google(input_text, src_lang, tgt_lang):
