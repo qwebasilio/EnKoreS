@@ -5,7 +5,7 @@ from googletrans import Translator
 from nltk.corpus import stopwords
 import heapq
 
-nltk.download('punkt_tab')
+nltk.download('punkt')
 nltk.download('stopwords')
 
 translator = Translator()
@@ -75,6 +75,7 @@ if st.button("Translate"):
     if st.session_state.input_text.strip():
         src_lang = "en" if st.session_state.lang_direction == "EN to KO" else "ko"
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
+        global translated_text, summarized_text
         translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
         summarized_text = ""
 
