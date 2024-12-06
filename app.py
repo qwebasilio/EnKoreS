@@ -18,7 +18,7 @@ def translate_text_google(input_text, src_lang, tgt_lang):
 def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='en'):
     try:
         parameters = {
-            'stop_words': ['en], 
+            'stop_words': ['en'], 
             'n_words': -1,
             'n_chars': -1,
             'lowercase': True,
@@ -39,7 +39,7 @@ def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='e
 def summarize_with_pyAutoSummarizer_ko(text, num_sentences=3, stop_words_lang='ko'):
     try:
         parameters = {
-            'stop_words': ['ko], 
+            'stop_words': ['ko'], 
             'n_words': -1,
             'n_chars': -1,
             'lowercase': True,
