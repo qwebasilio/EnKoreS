@@ -18,7 +18,7 @@ def translate_text_google(input_text, src_lang, tgt_lang):
 def summarize_with_pyAutoSummarizer(translated_text, num_sentences=3, stop_words_lang='en'):
     try:
         parameters = {
-            'stop_words': [stop_words_lang],
+            'stop_words': ['en'],
             'n_words': -1,
             'n_chars': -1,
             'lowercase': True,
@@ -71,7 +71,7 @@ if st.session_state.translated_text:
     if st.button("Summarize"):
         if st.session_state.translated_text.strip():
             stop_words_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
-            summarized_text = summarize_with_pyAutoSummarizer(translated_text, stop_words_lang=stop_words_lang)
+            summarized_text = summarize_with_pyAutoSummarizer(st.session_state.summarized_text, stop_words_lang=stop_words_lang)
             st.session_state.summarized_text = summarized_text
 
 if st.session_state.summarized_text:
