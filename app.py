@@ -1,23 +1,8 @@
 import streamlit as st
-import nltk
-from nltk.tokenize import sent_tokenize, word_tokenize
 from googletrans import Translator
-from nltk.corpus import stopwords
-import heapq
-
-@st.cache_data
-def download_nltk_data():
-    nltk.download("punkt_tab")
-    nltk.download("stopwords")
-
-download_nltk_data()
+from pyAutoSummarizer.base import summarization
 
 translator = Translator()
-
-korean_stopwords = [
-    "이", "그", "저", "은", "는", "이었", "으로", "에서", "를", "에", "와", "과", "도", "로", "의", "게",
-    "을", "한", "들", "임", "다", "고", "하", "되", "있", "등", "을", "입니다", "합니다"
-]
 
 translated_text = ""
 summarized_text = ""
@@ -30,35 +15,26 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def tokenize_text(text, lang):
+def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en'):
     try:
-        if lang == "english":
-            return sent_tokenize(text, language="english")
-        elif lang == "korean":
-            return sent_tokenize(text, language="english")
-        else:
-            return []
-    except LookupError:
-        return text.split(". ")
-
-def summarize_text(text, num_sentences=3, lang="english"):
-    sentences = tokenize_text(text, lang)
-    stop_words = set(stopwords.words(lang if lang in stopwords.fileids() else 'english'))
-    if lang == "korean":
-        stop_words.update(korean_stopwords)
-    word_frequencies = {}
-    for sentence in sentences:
-        words = word_tokenize(sentence.lower())
-        for word in words:
-            if word not in stop_words and word.isalnum():
-                word_frequencies[word] = word_frequencies.get(word, 0) + 1
-    sentence_scores = {}
-    for i, sentence in enumerate(sentences):
-        words = word_tokenize(sentence.lower())
-        sentence_scores[i] = sum(word_frequencies.get(word, 0) for word in words)
-    best_sentences = heapq.nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
-    summary = ' '.join(sentences[i] for i in sorted(best_sentences))
-    return summary
+        parameters = {
+            'stop_words': [stop_words_lang],
+            'n_words': -1,
+            'n_chars': -1,
+            'lowercase': True,
+            'rmv_accents': True,
+            'rmv_special_chars': True,
+            'rmv_numbers': False,
+            'rmv_custom_words': [],
+            'verbose': False
+        }
+        smr = summarization(text, **parameters)
+        rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
+        summary = smr.show_summary(rank, n=num_sentences)
+        return summary
+    except Exception as e:
+        st.error(f"Error during summarization: {e}")
+        return ""
 
 st.title("EnKoreS")
 
@@ -93,10 +69,10 @@ if st.session_state.translated_text:
     st.text_area("Translated Text:", value=st.session_state.translated_text, height=150, disabled=True)
 
     if st.button("Summarize"):
-        lang = "english" if st.session_state.lang_direction == "KO to EN" else "korean"
         if st.session_state.translated_text.strip():
-            summarized_text = summarize_text(translated_text, lang=lang)
+            stop_words_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
+            summarized_text = summarize_with_pyAutoSummarizer(translated_text, stop_words_lang=stop_words_lang)
             st.session_state.summarized_text = summarized_text
-            
+
 if st.session_state.summarized_text:
     st.text_area("Summarized Text:", value=st.session_state.summarized_text, height=150, disabled=True)
