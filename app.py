@@ -4,12 +4,6 @@ from pyAutoSummarizer.base import summarization
 
 translator = Translator()
 
-# Initialize session state variables
-if "translated_text" not in st.session_state:
-    st.session_state.translated_text = ""
-if "summarized_text" not in st.session_state:
-    st.session_state.summarized_text = ""
-
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
         translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
@@ -18,7 +12,7 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer_en(st.session_state.translated_text, num_sentences=3, stop_words_lang='en'):
     try:
         parameters = {
             'stop_words': [stop_words_lang],
@@ -31,7 +25,7 @@ def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='e
             'rmv_custom_words': [],
             'verbose': False
         }
-        smr = summarization(text, **parameters)
+        smr = summarization(st.session_state.translated_text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
@@ -39,7 +33,7 @@ def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='e
         st.error(f"Error during summarization: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_ko(text, num_sentences=3, stop_words_lang='ko'):
+def summarize_with_pyAutoSummarizer_ko(st.session_state.translated_text, num_sentences=3, stop_words_lang='ko'):
     try:
         parameters = {
             'stop_words': [stop_words_lang],
@@ -52,7 +46,7 @@ def summarize_with_pyAutoSummarizer_ko(text, num_sentences=3, stop_words_lang='k
             'rmv_custom_words': [],
             'verbose': False
         }
-        smr = summarization(text, **parameters)
+        smr = summarization(st.session_state.translated_text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
