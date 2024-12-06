@@ -24,67 +24,69 @@ def translate_text_google(input_text, src_lang, tgt_lang):
 
 def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en'):
     if stop_words_lang == 'ko':
-        stop_words = korean_stopwords
-        
-        parameters = {
-            'stop_words': stop_words, 
-            'n_words': 100,  # Limit to 100 words for summarization
-            'n_chars': -1,
-            'lowercase': True,
-            'rmv_accents': True,
-            'rmv_special_chars': True,
-            'rmv_numbers': False,
-            'rmv_custom_words': [],
-            'verbose': False
-        }
-        
-        if not text:
-            st.error("The text is empty, unable to summarize.")
-            return "Text is too short to summarize."
-        
-        smr = summarization(text, **parameters)
-        rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
-        
-        if rank is None or len(rank) == 0:
-            st.error("Summarization failed. Try providing a more detailed text.")
-            return "Summarization failed."
-        
-        summary = smr.show_summary(rank, n=num_sentences)
-        return summary
-    except Exception as e:
-        st.error(f"Error during summarization: {e}")
-        return "Error during summarization."
+        try:
+            stop_words = korean_stopwords
+            
+            parameters = {
+                'stop_words': stop_words, 
+                'n_words': 100,  # Limit to 100 words for summarization
+                'n_chars': -1,
+                'lowercase': True,
+                'rmv_accents': True,
+                'rmv_special_chars': True,
+                'rmv_numbers': False,
+                'rmv_custom_words': [],
+                'verbose': False
+            }
+            
+            if not text:
+                st.error("The text is empty, unable to summarize.")
+                return "Text is too short to summarize."
+            
+            smr = summarization(text, **parameters)
+            rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
+            
+            if rank is None or len(rank) == 0:
+                st.error("Summarization failed. Try providing a more detailed text.")
+                return "Summarization failed."
+            
+            summary = smr.show_summary(rank, n=num_sentences)
+            return summary
+        except Exception as e:
+            st.error(f"Error during summarization: {e}")
+            return "Error during summarization."
 
 
-elif stop_words_lang='en'        
-        parameters = {
-            'stop_words': ['en'], 
-            'n_words': -1,  # Limit to 100 words for summarization
-            'n_chars': -1,
-            'lowercase': True,
-            'rmv_accents': True,
-            'rmv_special_chars': True,
-            'rmv_numbers': False,
-            'rmv_custom_words': [],
-            'verbose': False
-        }
-        
-        if not text:
-            st.error("The text is empty, unable to summarize.")
-            return "Text is too short to summarize."
-        
-        smr = summarization(text, **parameters)
-        rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
-        
-        if rank is None or len(rank) == 0:
-            st.error("Summarization failed. Try providing a more detailed text.")
-            return "Summarization failed."
-        
-        summary = smr.show_summary(rank, n=num_sentences)
-        return summary
-    except Exception as e:
-        st.error(f"Error during summarization: {e}")
-        return "Error during summarization."
+    elif stop_words_lang='en':
+        try:
+            parameters = {
+                'stop_words': ['en'], 
+                'n_words': -1,  # Limit to 100 words for summarization
+                'n_chars': -1,
+                'lowercase': True,
+                'rmv_accents': True,
+                'rmv_special_chars': True,
+                'rmv_numbers': False,
+                'rmv_custom_words': [],
+                'verbose': False
+            }
+            
+            if not text:
+                st.error("The text is empty, unable to summarize.")
+                return "Text is too short to summarize."
+            
+            smr = summarization(text, **parameters)
+            rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
+            
+            if rank is None or len(rank) == 0:
+                st.error("Summarization failed. Try providing a more detailed text.")
+                return "Summarization failed."
+            
+            summary = smr.show_summary(rank, n=num_sentences)
+            return summary
+        except Exception as e:
+            st.error(f"Error during summarization: {e}")
+            return "Error during summarization."
 
 st.title("EnKoreS")
 
