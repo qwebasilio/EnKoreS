@@ -12,7 +12,7 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_en(st.session_state.input_text.strip(), num_sentences="", stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer_en(text, num_sentences="", stop_words_lang='en'):
     try:
         parameters = {
             'stop_words': ['en'], 
@@ -25,7 +25,7 @@ def summarize_with_pyAutoSummarizer_en(st.session_state.input_text.strip(), num_
             'rmv_custom_words': [],
             'verbose': False
         }
-        smr = summarization(st.session_state.input_text.strip(), **parameters)
+        smr = summarization(text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
@@ -33,7 +33,7 @@ def summarize_with_pyAutoSummarizer_en(st.session_state.input_text.strip(), num_
         st.error(f"Error during summarization: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_ko(st.session_state.input_text.strip(), num_sentences="", stop_words_lang='ko'):
+def summarize_with_pyAutoSummarizer_ko(text, num_sentences="", stop_words_lang='ko'):
     try:
         parameters = {
             'stop_words': ['ko'], 
@@ -46,7 +46,7 @@ def summarize_with_pyAutoSummarizer_ko(st.session_state.input_text.strip(), num_
             'rmv_custom_words': [], 
             'verbose': False
         }
-        smr = summarization(st.session_state.input_text.strip(), **parameters)
+        smr = summarization(text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
