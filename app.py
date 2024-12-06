@@ -7,7 +7,7 @@ import heapq
 
 @st.cache_data
 def download_nltk_data():
-    nltk.download("punkt")
+    nltk.download("punkt_tab")
     nltk.download("stopwords")
 
 download_nltk_data()
