@@ -15,8 +15,8 @@ korean_stopwords = [
     "을", "한", "들", "임", "다", "고", "하", "되", "있", "등", "을", "입니다", "합니다"
 ]
 
-translated_text = ""  # Holds the translated text
-summarized_text = ""  # Holds the summarized text
+translated_text = ""
+summarized_text = ""
 
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
@@ -62,12 +62,18 @@ if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KO"
 if "input_text" not in st.session_state:
     st.session_state.input_text = ""
+if "translated_text" not in st.session_state:
+    st.session_state.translated_text = ""
+if "summarized_text" not in st.session_state:
+    st.session_state.summarized_text = ""
 
 lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KO", "KO to EN"])
 
 if lang_direction != st.session_state.lang_direction:
     st.session_state.lang_direction = lang_direction
     st.session_state.input_text = ""
+    st.session_state.translated_text = ""
+    st.session_state.summarized_text = ""
 
 st.session_state.input_text = st.text_area("Enter text to translate:", value=st.session_state.input_text)
 
@@ -75,17 +81,17 @@ if st.button("Translate"):
     if st.session_state.input_text.strip():
         src_lang = "en" if st.session_state.lang_direction == "EN to KO" else "ko"
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
-        global translated_text, summarized_text
         translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
-        summarized_text = ""
-
-if translated_text:
-    st.text_area("Translated Text:", value=translated_text, height=150, disabled=True)
+        st.session_state.translated_text = translated_text
+        
+if st.session_state.translated_text:
+    st.text_area("Translated Text:", value=st.session_state.translated_text, height=150, disabled=True)
 
     if st.button("Summarize"):
         lang = "english" if st.session_state.lang_direction == "KO to EN" else "korean"
-        if translated_text.strip():
+        if st.session_state.translated_text.strip():
             summarized_text = summarize_text(translated_text, lang=lang)
-
-if summarized_text:
-    st.text_area("Summarized Text:", value=summarized_text, height=150, disabled=True)
+            st.session_state.summarized_text = summarized_text
+            
+if st.session_state.summarized_text:
+    st.text_area("Summarized Text:", value=st.session_state.summarized_text, height=150, disabled=True)
