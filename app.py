@@ -4,6 +4,10 @@ from pyAutoSummarizer.base import summarization
 
 translator = Translator()
 
+@st.cache
+translated_text = ""
+summarized_text = ""
+
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
         translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
@@ -12,12 +16,12 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_en(st.session_state.translated_text, num_sentences=3, stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer_en(translated_text, num_sentences="", stop_words_lang='en'):
     try:
         parameters = {
-            'stop_words': [stop_words_lang],
-            'n_words': -1,
-            'n_chars': -1,
+            'stop_words': ['en'], 
+            'n_words': 100,
+            'n_chars': 1000,
             'lowercase': True,
             'rmv_accents': True,
             'rmv_special_chars': True,
@@ -25,7 +29,7 @@ def summarize_with_pyAutoSummarizer_en(st.session_state.translated_text, num_sen
             'rmv_custom_words': [],
             'verbose': False
         }
-        smr = summarization(st.session_state.translated_text, **parameters)
+        smr = summarization(translated_text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
@@ -33,20 +37,20 @@ def summarize_with_pyAutoSummarizer_en(st.session_state.translated_text, num_sen
         st.error(f"Error during summarization: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_ko(st.session_state.translated_text, num_sentences=3, stop_words_lang='ko'):
+def summarize_with_pyAutoSummarizer_ko(translated_text, num_sentences="", stop_words_lang='ko'):
     try:
         parameters = {
-            'stop_words': [stop_words_lang],
-            'n_words': -1,
-            'n_chars': -1,
+            'stop_words': ['ko'], 
+            'n_words': 100,
+            'n_chars': 1000,
             'lowercase': True,
-            'rmv_accents': False,
-            'rmv_special_chars': False,
+            'rmv_accents': False, 
+            'rmv_special_chars': False,  
             'rmv_numbers': False,
-            'rmv_custom_words': [],
+            'rmv_custom_words': [], 
             'verbose': False
         }
-        smr = summarization(st.session_state.translated_text, **parameters)
+        smr = summarization(translated_text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
@@ -60,6 +64,10 @@ if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KO"
 if "input_text" not in st.session_state:
     st.session_state.input_text = ""
+if "translated_text" not in st.session_state:
+    st.session_state.translated_text = ""
+if "summarized_text" not in st.session_state:
+    st.session_state.summarized_text = ""
 
 lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KO", "KO to EN"])
 
@@ -75,7 +83,8 @@ if st.button("Translate"):
     if st.session_state.input_text.strip():
         src_lang = "en" if st.session_state.lang_direction == "EN to KO" else "ko"
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
-        st.session_state.translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
+        translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
+        st.session_state.translated_text = translated_text
         st.session_state.summarized_text = ""
         
 if st.session_state.translated_text:
@@ -84,9 +93,10 @@ if st.session_state.translated_text:
     if st.button("Summarize"):
         if st.session_state.translated_text.strip():
             if st.session_state.lang_direction == "EN to KO":
-                st.session_state.summarized_text = summarize_with_pyAutoSummarizer_ko(st.session_state.translated_text, stop_words_lang="ko")
+                summarized_text = summarize_with_pyAutoSummarizer_ko(translated_text, stop_words_lang="ko")
             else:
-                st.session_state.summarized_text = summarize_with_pyAutoSummarizer_en(st.session_state.translated_text, stop_words_lang="en")
+                summarized_text = summarize_with_pyAutoSummarizer_en(translated_text, stop_words_lang="en")
+            st.session_state.summarized_text = summarized_text
 
 if st.session_state.summarized_text:
     st.text_area("Summarized Text:", value=st.session_state.summarized_text, height=150, disabled=True)
