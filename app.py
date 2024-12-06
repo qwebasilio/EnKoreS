@@ -22,7 +22,7 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer(translated_text, num_sentences=3, stop_words_lang='en'):
     if stop_words_lang == 'ko':
         try:
             stop_words = korean_stopwords
@@ -39,11 +39,11 @@ def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en')
                 'verbose': False
             }
             
-            if not text:
+            if not translated_text:
                 st.error("The text is empty, unable to summarize.")
                 return "Text is too short to summarize."
             
-            smr = summarization(text, **parameters)
+            smr = summarization(translated_text, **parameters)
             rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
             
             if rank is None or len(rank) == 0:
@@ -71,11 +71,11 @@ def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en')
                 'verbose': False
             }
             
-            if not text:
+            if not translated_text:
                 st.error("The text is empty, unable to summarize.")
                 return "Text is too short to summarize."
             
-            smr = summarization(text, **parameters)
+            smr = summarization(translated_text, **parameters)
             rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
             
             if rank is None or len(rank) == 0:
