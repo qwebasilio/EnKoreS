@@ -5,6 +5,5 @@ torch
 torchvision
 torchaudio
 sentencepiece
-nltk
 googletrans==4.0.0-rc1
-konlpy
+pyAutoSummarizer
