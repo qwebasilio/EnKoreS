@@ -4,6 +4,11 @@ from pyAutoSummarizer.base import summarization
 
 translator = Translator()
 
+if "translated_text" not in st.session_state:
+    st.session_state.translated_text = ""
+if "summarized_text" not in st.session_state:
+    st.session_state.summarized_text = ""
+    
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
         translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
