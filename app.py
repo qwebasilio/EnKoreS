@@ -1,6 +1,7 @@
 import streamlit as st
 from googletrans import Translator
 from pyAutoSummarizer.base import summarization
+import re
 
 translator = Translator()
 
@@ -8,7 +9,11 @@ if "translated_text" not in st.session_state:
     st.session_state.translated_text = ""
 if "summarized_text" not in st.session_state:
     st.session_state.summarized_text = ""
-    
+
+def add_spaces_between_sentences(text):
+    text = re.sub(r'(?<=[a-zA-Z])\.(?=[a-zA-Z])', '. ', text)
+    return text
+
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
         translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
@@ -82,16 +87,18 @@ if st.button("Translate"):
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
         st.session_state.translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
         st.session_state.summarized_text = ""
-        
+
 if st.session_state.translated_text:
     st.text_area("Translated Text:", value=st.session_state.translated_text, height=150, disabled=True)
 
     if st.button("Summarize"):
         if st.session_state.translated_text.strip():
+            processed_text = add_spaces_between_sentences(st.session_state.translated_text)
+
             if st.session_state.lang_direction == "EN to KO":
-                st.session_state.summarized_text = summarize_with_pyAutoSummarizer_ko(st.session_state.translated_text, stop_words_lang="ko")
+                st.session_state.summarized_text = summarize_with_pyAutoSummarizer_ko(processed_text, stop_words_lang="ko")
             else:
-                st.session_state.summarized_text = summarize_with_pyAutoSummarizer_en(st.session_state.translated_text, stop_words_lang="en")
+                st.session_state.summarized_text = summarize_with_pyAutoSummarizer_en(processed_text, stop_words_lang="en")
 
 if st.session_state.summarized_text:
     st.text_area("Summarized Text:", value=st.session_state.summarized_text, height=150, disabled=True)
