@@ -4,8 +4,8 @@ from pyAutoSummarizer.base import summarization
 
 translator = Translator()
 
-translated_text = "Climate change is emerging as a major issue worldwide. Rapid temperature rises and extreme weather changes have a significant impact on the natural environment, which in turn has a direct impact on human life. In particular, rising sea levels and the increased frequency of natural disasters are of concern. To address this, each country is making various efforts to reduce greenhouse gas emissions and expand renewable energy. Climate change response is becoming an important task that goes beyond simple environmental protection and passes on a sustainable Earth to future generations."
-summarized_text = ""
+global translated_text = ""
+global summarized_text = ""
 
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
