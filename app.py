@@ -4,8 +4,8 @@ from pyAutoSummarizer.base import summarization
 
 translator = Translator()
 
-global translated_text = ""
-global summarized_text = ""
+translated_text = ""
+summarized_text = ""
 
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
@@ -19,8 +19,8 @@ def summarize_with_pyAutoSummarizer_en(translated_text, num_sentences=3, stop_wo
     try:
         parameters = {
             'stop_words': ['en'], 
-            'n_words': -1,
-            'n_chars': -1,
+            'n_words': 100,
+            'n_chars': 1000,
             'lowercase': True,
             'rmv_accents': True,
             'rmv_special_chars': True,
@@ -40,8 +40,8 @@ def summarize_with_pyAutoSummarizer_ko(translated_text, num_sentences=3, stop_wo
     try:
         parameters = {
             'stop_words': ['ko'], 
-            'n_words': -1,
-            'n_chars': -1,
+            'n_words': 100,
+            'n_chars': 1000,
             'lowercase': True,
             'rmv_accents': False, 
             'rmv_special_chars': False,  
