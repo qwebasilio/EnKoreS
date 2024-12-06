@@ -15,6 +15,8 @@ korean_stopwords = [
     "을", "한", "들", "임", "다", "고", "하", "되", "있", "등", "을", "입니다", "합니다"
 ]
 
+translated_text = ""
+
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
         translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
@@ -24,12 +26,15 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         return ""
 
 def tokenize_text(text, lang):
-    if lang == "english":
-        return sent_tokenize(text, language="english")
-    elif lang == "korean":
-        return sent_tokenize(text, language="english")
-    else:
-        return []
+    try:
+        if lang == "english":
+            return sent_tokenize(text, language="english")
+        elif lang == "korean":
+            return sent_tokenize(text, language="english")
+        else:
+            return []
+    except LookupError:
+        return text.split(". ")
 
 def summarize_text(text, num_sentences=3, lang="english"):
     sentences = tokenize_text(text, lang)
@@ -56,8 +61,6 @@ if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KO"
 if "input_text" not in st.session_state:
     st.session_state.input_text = ""
-if "output_text" not in st.session_state:
-    st.session_state.output_text = ""
 if "summary_text" not in st.session_state:
     st.session_state.summary_text = ""
 
@@ -66,25 +69,24 @@ lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KO", "
 if lang_direction != st.session_state.lang_direction:
     st.session_state.lang_direction = lang_direction
     st.session_state.input_text = ""
-    st.session_state.output_text = ""
     st.session_state.summary_text = ""
 
-input_text = st.text_area("Enter text to translate:", value=st.session_state.input_text)
+st.session_state.input_text = st.text_area("Enter text to translate:", value=st.session_state.input_text)
 
 if st.button("Translate"):
     if st.session_state.input_text.strip():
         src_lang = "en" if st.session_state.lang_direction == "EN to KO" else "ko"
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
-        st.session_state.output_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
-        st.session_state.summary_text = ""
+        global translated_text
+        translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
 
-if st.session_state.output_text:
-    st.text_area("Translated Text:", value=st.session_state.output_text, height=150, disabled=True)
+if translated_text:
+    st.text_area("Translated Text:", value=translated_text, height=150, disabled=True)
 
     if st.button("Summarize"):
         lang = "english" if st.session_state.lang_direction == "KO to EN" else "korean"
-        if st.session_state.output_text.strip():
-            st.session_state.summary_text = summarize_text(st.session_state.output_text, lang=lang)
+        if translated_text.strip():
+            st.session_state.summary_text = summarize_text(translated_text, lang=lang)
 
 if st.session_state.summary_text:
     st.text_area("Summarized Text:", value=st.session_state.summary_text, height=150, disabled=True)
