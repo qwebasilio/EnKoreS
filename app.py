@@ -4,13 +4,11 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from googletrans import Translator
 from nltk.corpus import stopwords
 import heapq
-from konlpy.tag import Okt
 
-nltk.download('punkt_tab')
+nltk.download('punkt')
 nltk.download('stopwords')
 
 translator = Translator()
-okt = Okt()
 
 korean_stopwords = [
     "이", "그", "저", "은", "는", "이었", "으로", "에서", "를", "에", "와", "과", "도", "로", "의", "게",
@@ -29,7 +27,7 @@ def tokenize_text(text, lang):
     if lang == "english":
         return sent_tokenize(text, language="english")
     elif lang == "korean":
-        return okt.sent_tokenize(text)
+        return sent_tokenize(text, language="english")
     else:
         return []
 
