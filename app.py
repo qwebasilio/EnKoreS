@@ -4,6 +4,12 @@ from pyAutoSummarizer.base import summarization
 
 translator = Translator()
 
+# Initialize session state variables
+if "translated_text" not in st.session_state:
+    st.session_state.translated_text = ""
+if "summarized_text" not in st.session_state:
+    st.session_state.summarized_text = ""
+
 def translate_text_google(input_text, src_lang, tgt_lang):
     try:
         translation = translator.translate(input_text, src=src_lang, dest=tgt_lang)
@@ -12,10 +18,10 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_en(text, num_sentences="", stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='en'):
     try:
         parameters = {
-            'stop_words': ['en'], 
+            'stop_words': [stop_words_lang],
             'n_words': -1,
             'n_chars': -1,
             'lowercase': True,
@@ -33,17 +39,17 @@ def summarize_with_pyAutoSummarizer_en(text, num_sentences="", stop_words_lang='
         st.error(f"Error during summarization: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_ko(text, num_sentences="", stop_words_lang='ko'):
+def summarize_with_pyAutoSummarizer_ko(text, num_sentences=3, stop_words_lang='ko'):
     try:
         parameters = {
-            'stop_words': ['ko'], 
+            'stop_words': [stop_words_lang],
             'n_words': -1,
             'n_chars': -1,
             'lowercase': True,
-            'rmv_accents': False, 
-            'rmv_special_chars': False,  
+            'rmv_accents': False,
+            'rmv_special_chars': False,
             'rmv_numbers': False,
-            'rmv_custom_words': [], 
+            'rmv_custom_words': [],
             'verbose': False
         }
         smr = summarization(text, **parameters)
@@ -60,10 +66,6 @@ if "lang_direction" not in st.session_state:
     st.session_state.lang_direction = "EN to KO"
 if "input_text" not in st.session_state:
     st.session_state.input_text = ""
-if "translated_text" not in st.session_state:
-    st.session_state.translated_text = ""
-if "summarized_text" not in st.session_state:
-    st.session_state.summarized_text = ""
 
 lang_direction = st.sidebar.radio("Select Translation Direction", ["EN to KO", "KO to EN"])
 
