@@ -77,7 +77,6 @@ if st.button("Translate"):
     if st.session_state.input_text.strip():
         src_lang = "en" if st.session_state.lang_direction == "EN to KO" else "ko"
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
-        global translated_text
         translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
 
 if translated_text:
