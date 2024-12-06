@@ -1,23 +1,8 @@
 import streamlit as st
-import nltk
-from nltk.tokenize import sent_tokenize, word_tokenize
 from googletrans import Translator
-from nltk.corpus import stopwords
 from pyAutoSummarizer.base import summarization
 
-@st.cache_data
-def download_nltk_data():
-    nltk.download("punkt_tab")
-    nltk.download("stopwords")
-
-download_nltk_data()
-
 translator = Translator()
-
-korean_stopwords = [
-    "이", "그", "저", "은", "는", "이었", "으로", "에서", "를", "에", "와", "과", "도", "로", "의", "게",
-    "을", "한", "들", "임", "다", "고", "하", "되", "있", "등", "을", "입니다", "합니다", "이것", "저것"
-]
 
 translated_text = ""
 summarized_text = ""
@@ -30,14 +15,12 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='en'):
     try:
-        stop_words = korean_stopwords if stop_words_lang == 'ko' else []
-        
         parameters = {
-            'stop_words': stop_words, 
-            'n_words': 100, 
-            'n_chars': 5,
+            'stop_words': ['en], 
+            'n_words': -1,
+            'n_chars': -1,
             'lowercase': True,
             'rmv_accents': True,
             'rmv_special_chars': True,
@@ -45,23 +28,34 @@ def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en')
             'rmv_custom_words': [],
             'verbose': False
         }
-        
-        if not text:
-            st.error("The text is empty, unable to summarize.")
-            return "Text is too short to summarize."
-        
         smr = summarization(text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
-        
-        if rank is None or len(rank) == 0:
-            st.error("Summarization failed. Try providing a more detailed text.")
-            return "Summarization failed."
-        
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
     except Exception as e:
         st.error(f"Error during summarization: {e}")
-        return "Error during summarization."
+        return ""
+
+def summarize_with_pyAutoSummarizer_ko(text, num_sentences=3, stop_words_lang='ko'):
+    try:
+        parameters = {
+            'stop_words': ['ko], 
+            'n_words': -1,
+            'n_chars': -1,
+            'lowercase': True,
+            'rmv_accents': False, 
+            'rmv_special_chars': False,  
+            'rmv_numbers': False,
+            'rmv_custom_words': [], 
+            'verbose': False
+        }
+        smr = summarization(text, **parameters)
+        rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
+        summary = smr.show_summary(rank, n=num_sentences)
+        return summary
+    except Exception as e:
+        st.error(f"Error during summarization: {e}")
+        return ""
 
 st.title("EnKoreS")
 
@@ -90,15 +84,17 @@ if st.button("Translate"):
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
         translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
         st.session_state.translated_text = translated_text
-        st.session_state.summarized_text = "" 
-
+        st.session_state.summarized_text = ""
+        
 if st.session_state.translated_text:
     st.text_area("Translated Text:", value=st.session_state.translated_text, height=150, disabled=True)
 
     if st.button("Summarize"):
-        lang = "english" if st.session_state.lang_direction == "KO to EN" else "korean"
         if st.session_state.translated_text.strip():
-            summarized_text = summarize_with_pyAutoSummarizer(st.session_state.translated_text, stop_words_lang=('ko' if lang == 'korean' else 'en'))
+            if st.session_state.lang_direction == "EN to KO":
+                summarized_text = summarize_with_pyAutoSummarizer_ko(translated_text, stop_words_lang="ko")
+            else:
+                summarized_text = summarize_with_pyAutoSummarizer_en(translated_text, stop_words_lang="en")
             st.session_state.summarized_text = summarized_text
 
 if st.session_state.summarized_text:
