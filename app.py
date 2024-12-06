@@ -57,7 +57,7 @@ def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en')
             return "Error during summarization."
 
 
-    elif stop_words_lang='en':
+    elif stop_words_lang=='en':
         try:
             parameters = {
                 'stop_words': ['en'], 
