@@ -22,7 +22,7 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_en(text=processed_text, num_sentences=3, stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer_en(text, num_sentences=3, stop_words_lang='en'):
     try:
         parameters = {
             'stop_words': ['en'],
@@ -43,7 +43,7 @@ def summarize_with_pyAutoSummarizer_en(text=processed_text, num_sentences=3, sto
         st.error(f"Error during summarization: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer_ko(text=processed_text, num_sentences=3, stop_words_lang='ko'):
+def summarize_with_pyAutoSummarizer_ko(text, num_sentences=3, stop_words_lang='ko'):
     try:
         parameters = {
             'stop_words': ['ko'],
