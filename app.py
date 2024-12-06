@@ -86,6 +86,7 @@ if st.button("Translate"):
         src_lang = "en" if st.session_state.lang_direction == "EN to KO" else "ko"
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
         st.session_state.translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
+        st.session_state.translated_text = add_spaces_between_sentences(st.session_state.translated_text)
         st.session_state.summarized_text = ""
 
 if st.session_state.translated_text:
