@@ -15,7 +15,7 @@ def translate_text_google(input_text, src_lang, tgt_lang):
         st.error(f"Error during translation: {e}")
         return ""
 
-def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en'):
+def summarize_with_pyAutoSummarizer(translated_text, num_sentences=3, stop_words_lang='en'):
     try:
         parameters = {
             'stop_words': [stop_words_lang],
@@ -28,7 +28,7 @@ def summarize_with_pyAutoSummarizer(text, num_sentences=3, stop_words_lang='en')
             'rmv_custom_words': [],
             'verbose': False
         }
-        smr = summarization(text, **parameters)
+        smr = summarization(translated_text, **parameters)
         rank = smr.summ_ext_LSA(embeddings=False, model='all-MiniLM-L6-v2')
         summary = smr.show_summary(rank, n=num_sentences)
         return summary
