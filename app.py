@@ -87,6 +87,7 @@ if st.button("Translate"):
         tgt_lang = "ko" if st.session_state.lang_direction == "EN to KO" else "en"
         translated_text = translate_text_google(st.session_state.input_text, src_lang, tgt_lang)
         st.session_state.translated_text = translated_text
+        st.session_state.summarized_text = ""
         
 if st.session_state.translated_text:
     st.text_area("Translated Text:", value=st.session_state.translated_text, height=150, disabled=True)
